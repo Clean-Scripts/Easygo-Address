@@ -211,43 +211,57 @@
         }
 
         // --- SAVE TO TARGET DATABASE ---
-        async function save() {
-            const uid = localStorage.getItem('eg_user');
-            const saveBtn = document.getElementById('saveBtn');
-            saveBtn.disabled = true;
-            document.getElementById('saveText').innerText = "UPLOADING...";
-            document.getElementById('saveLoader').classList.remove('hidden');
+    async function save() {
+    const uid = localStorage.getItem('eg_user');
+    const saveBtn = document.getElementById('saveBtn');
+    
+    // UI Feedback
+    saveBtn.disabled = true;
+    document.getElementById('saveText').innerText = "SENDING TO CLOUD...";
 
-            const items = [];
-            document.querySelectorAll('.item-row').forEach(r => {
-                const i = r.querySelectorAll('input');
-                if(i[0].value) items.push({ n: i[0].value, q: i[1].value, r: i[2].value });
-            });
+    const items = [];
+    document.querySelectorAll('.item-row').forEach(r => {
+        const i = r.querySelectorAll('input');
+        if(i[0].value) items.push({ n: i[0].value, q: i[1].value, r: i[2].value });
+    });
 
-            const doc = { 
-                uid: uid, date: document.getElementById('date').value, 
-                org: document.getElementById('org').value, inv: document.getElementById('inv').value,
-                gstn: document.getElementById('gstn').value, items: items, 
-                gst_amount: document.getElementById('gstAmount').value,
-                total: document.getElementById('totalLabel').innerText, image: billImg 
-            };
+    const doc = { 
+        uid: uid, 
+        date: document.getElementById('date').value, 
+        org: document.getElementById('org').value, 
+        total: document.getElementById('totalLabel').innerText, 
+        image: billImg 
+    };
 
-            try {
-                const response = await fetch(`https://cloud.mongodb.com/api/atlas/v1.0/groups/694d93d7afdf354b9be19888/clusters/EasyGoCluster/data/insertOne`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json', 'Authorization': 'Basic ' + btoa('gojfbxfj:e636d3ba-d0fd-4186-98d8-b81a3f656ce3') },
-                    body: JSON.stringify({ database: "EasyGoTracker", collection: "expenses", document: doc })
-                });
-                if(response.ok) { alert("SUCCESS: Saved!"); location.reload(); }
-                else { throw new Error(); }
-            } catch(e) {
-                alert("SYNC FAILED. Check Network Access status.");
-                saveBtn.disabled = false;
-                document.getElementById('saveText').innerText = "Sync to Cloud";
-                document.getElementById('saveLoader').classList.add('hidden');
-            }
+    try {
+        // Updated URL and Auth from your verified screenshots
+        const res = await fetch(`https://data.mongodb-api.com/app/data-ghpxt/endpoint/data/v1/action/insertOne`, {
+            method: 'POST',
+            headers: { 
+                'Content-Type': 'application/json', 
+                'api-key': 'e636d3ba-d0fd-4186-98d8-b81a3f656ce3' // Using your Private Key directly as API-Key
+            },
+            body: JSON.stringify({ 
+                dataSource: "EasyGoCluster",
+                database: "EasyGoTracker", 
+                collection: "expenses", 
+                document: doc 
+            })
+        });
+        
+        if(res.ok) {
+            alert("✅ SUCCESS: Bill saved in EasyGoTracker!");
+            location.reload();
+        } else {
+            const err = await res.json();
+            alert("❌ ATLAS ERROR: " + (err.error || "Check if Data API is Enabled"));
+            saveBtn.disabled = false;
         }
-
+    } catch(e) {
+        alert("❌ CONNECTION ERROR: Check your internet or Data API status.");
+        saveBtn.disabled = false;
+    }
+}
         document.getElementById('date').valueAsDate = new Date();
     </script>
 </body>
