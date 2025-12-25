@@ -3,14 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>EasyGo Tracker v3.5</title>
+    <title>EasyGo Tracker v3.7 - Full Auto</title>
     <link rel="icon" type="image/png" href="https://raw.githubusercontent.com/Clean-Scripts/EasyGo-Expense-Tracker/refs/heads/main/logo.png">
     <script src="https://cdn.tailwindcss.com"></script>
     <script src='https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js'></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap');
         body { font-family: 'Inter', sans-serif; }
-        #video { width: 100%; border-radius: 1.5rem; background: #000; aspect-ratio: 3/4; object-fit: cover; }
+        #video, #previewImg { width: 100%; border-radius: 1.5rem; background: #000; aspect-ratio: 3/4; object-fit: cover; }
         .no-scrollbar::-webkit-scrollbar { display: none; }
     </style>
 </head>
@@ -20,40 +20,34 @@
         <div class="max-w-xl mx-auto flex items-center justify-between">
             <div class="flex items-center gap-2">
                 <img src="https://raw.githubusercontent.com/Clean-Scripts/EasyGo-Expense-Tracker/refs/heads/main/logo.png" alt="EasyGo" class="h-10 w-10 rounded-full border object-cover">
-                <h1 class="text-lg font-black text-blue-600">EasyGo</h1>
+                <h1 class="text-lg font-black text-blue-600">EasyGo <span class="text-slate-400 font-normal">v3.7</span></h1>
             </div>
-            <div id="status" class="hidden text-[9px] font-black bg-blue-600 text-white px-3 py-1 rounded-full animate-pulse uppercase">AI Reading...</div>
+            <div id="status" class="hidden text-[9px] font-black bg-blue-600 text-white px-3 py-1 rounded-full uppercase">Scanning...</div>
         </div>
     </header>
 
     <main class="max-w-xl mx-auto p-4 space-y-4">
         
-        <div class="relative">
-            <input type="text" id="searchInput" oninput="render()" placeholder="Search Invoice or GST..." 
-                   class="w-full p-3 pl-10 bg-white border rounded-2xl text-xs focus:ring-2 focus:ring-blue-500">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 absolute left-3 top-3.5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
-        </div>
-
-        <section class="relative bg-black rounded-[2rem] overflow-hidden shadow-2xl border-4 border-white">
+        <section class="relative bg-black rounded-[2.5rem] overflow-hidden shadow-2xl border-4 border-white">
             <video id="video" autoplay playsinline></video>
-            <div class="absolute bottom-4 left-0 right-0 flex justify-center gap-4">
-                <button onclick="startCamera()" class="bg-white/20 backdrop-blur-md text-white px-4 py-2 rounded-full text-[10px] font-bold">Start Cam</button>
-                <button onclick="processBill()" class="bg-white h-14 w-14 rounded-full border-4 border-blue-600 flex items-center justify-center active:scale-90 shadow-xl">
+            <img id="previewImg" class="hidden absolute top-0 left-0 z-10">
+            <div class="absolute bottom-4 left-0 right-0 flex justify-center gap-4 z-20">
+                <button onclick="retake()" id="retakeBtn" class="hidden bg-red-600 text-white px-4 py-2 rounded-full text-[10px] font-bold">Retake</button>
+                <button onclick="processBill()" id="captureBtn" class="bg-white h-14 w-14 rounded-full border-4 border-blue-600 flex items-center justify-center active:scale-90 shadow-xl">
                     <div class="h-8 w-8 bg-blue-600 rounded-full"></div>
                 </button>
             </div>
             <canvas id="canvas" class="hidden"></canvas>
         </section>
 
-        <section class="bg-white p-6 rounded-[2.5rem] shadow-sm border space-y-4">
-            <input type="hidden" id="editId">
+        <section id="entryForm" class="bg-white p-6 rounded-[2.5rem] shadow-sm border space-y-4">
             <div class="grid grid-cols-2 gap-3">
                 <div class="space-y-1">
-                    <label class="text-[9px] font-black text-slate-400 uppercase">1. Date</label>
+                    <label class="text-[9px] font-black text-slate-400">1. DATE</label>
                     <input type="date" id="date" class="w-full p-3 bg-slate-50 rounded-xl border-none text-xs">
                 </div>
                 <div class="space-y-1">
-                    <label class="text-[9px] font-black text-slate-400 uppercase">Type</label>
+                    <label class="text-[9px] font-black text-slate-400">TYPE</label>
                     <select id="type" class="w-full p-3 bg-slate-50 rounded-xl border-none text-xs font-bold">
                         <option value="Spent">🔴 Spent</option>
                         <option value="Earned">🟢 Earned</option>
@@ -62,90 +56,115 @@
             </div>
 
             <div class="space-y-1">
-                <label class="text-[9px] font-black text-slate-400 uppercase">2. Organisation Name</label>
-                <input type="text" id="org" placeholder="Shop Name" class="w-full p-3 bg-slate-50 rounded-xl border-none text-xs font-bold">
+                <label class="text-[9px] font-black text-slate-400">2. ORGANISATION NAME</label>
+                <input type="text" id="org" placeholder="Auto-filling..." class="w-full p-3 bg-slate-50 rounded-xl border-none text-xs font-bold">
             </div>
 
             <div class="grid grid-cols-2 gap-3">
                 <div class="space-y-1">
-                    <label class="text-[9px] font-black text-slate-400 uppercase">3. Invoice No / S.No</label>
-                    <input type="text" id="inv" class="w-full p-3 bg-slate-50 rounded-xl border-none text-xs">
+                    <label class="text-[9px] font-black text-slate-400">3. INVOICE / S.No</label>
+                    <input type="text" id="inv" placeholder="Searching..." class="w-full p-3 bg-slate-50 rounded-xl border-none text-xs">
                 </div>
                 <div class="space-y-1">
-                    <label class="text-[9px] font-black text-slate-400 uppercase">4. GST Number</label>
-                    <input type="text" id="gstn" placeholder="GSTIN" class="w-full p-3 bg-slate-50 rounded-xl border-none text-xs uppercase font-mono">
+                    <label class="text-[9px] font-black text-slate-400">4. GST NUMBER</label>
+                    <input type="text" id="gstn" placeholder="Detecting..." class="w-full p-3 bg-slate-50 rounded-xl border-none text-xs uppercase font-mono">
                 </div>
             </div>
 
             <div id="itemsContainer" class="space-y-2 border-t pt-4">
-                <label class="text-[9px] font-black text-slate-400 uppercase">5, 6, 7. Items (Name | Qty | Rate)</label>
-                <div class="item-row grid grid-cols-12 gap-2">
-                    <input type="text" placeholder="Item" class="col-span-6 p-2 bg-slate-50 rounded-lg text-[10px] border-none">
-                    <input type="number" placeholder="Qty" oninput="calculate()" class="col-span-2 p-2 bg-slate-50 rounded-lg text-[10px] text-center border-none">
-                    <input type="number" placeholder="Rate" oninput="calculate()" class="col-span-4 p-2 bg-slate-50 rounded-lg text-[10px] text-center border-none">
+                <label class="text-[9px] font-black text-slate-400">5, 6, 7. MULTI-ITEM AUTO-LIST</label>
                 </div>
-            </div>
-            <button onclick="addItemRow()" class="text-[10px] font-bold text-blue-600 bg-blue-50 px-3 py-1 rounded-lg">+ Add Item</button>
+            <button onclick="addItemRow('', 1, 0)" class="text-[10px] font-bold text-blue-600 bg-blue-50 px-3 py-1 rounded-lg">+ Manually Add Item</button>
 
             <div class="space-y-1 border-t pt-2">
-                <label class="text-[9px] font-black text-slate-400 uppercase">8. GST Charged (₹)</label>
+                <label class="text-[9px] font-black text-slate-400">8. GST CHARGED (₹)</label>
                 <input type="number" id="gstAmount" oninput="calculate()" class="w-full p-3 bg-slate-50 rounded-xl border-none text-xs">
             </div>
 
             <div class="bg-blue-600 p-5 rounded-3xl text-center shadow-lg">
-                <p class="text-[9px] text-blue-100 font-bold uppercase mb-1">9. Total Amount</p>
+                <p class="text-[9px] text-blue-100 font-bold uppercase mb-1">9. TOTAL AMOUNT</p>
                 <h2 id="totalLabel" class="text-3xl font-black text-white">₹ 0.00</h2>
             </div>
 
-            <button id="saveBtn" onclick="save()" class="w-full bg-slate-900 text-white font-black py-4 rounded-2xl text-xs uppercase tracking-widest shadow-xl">Save Record</button>
-            <button id="cancelBtn" onclick="resetForm()" class="hidden w-full text-slate-400 font-bold text-[10px] uppercase">Cancel Edit</button>
+            <button onclick="save()" class="w-full bg-slate-900 text-white font-black py-4 rounded-2xl text-xs uppercase tracking-widest shadow-xl">Confirm & Save</button>
         </section>
 
         <div id="list" class="space-y-3"></div>
     </main>
 
     <script>
-        let db = JSON.parse(localStorage.getItem('easygo_ledger_v35')) || [];
+        let db = JSON.parse(localStorage.getItem('easygo_ledger_v37')) || [];
         let billImg = null;
 
         async function startCamera() {
-            try {
-                const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
-                document.getElementById('video').srcObject = stream;
-            } catch (err) { alert("Camera Error"); }
+            const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
+            document.getElementById('video').srcObject = stream;
+            document.getElementById('previewImg').classList.add('hidden');
         }
 
         async function processBill() {
             const v = document.getElementById('video');
             const c = document.getElementById('canvas');
             const ctx = c.getContext('2d');
-            c.width = 600; c.height = 800;
-            ctx.drawImage(v, 0, 0, 600, 800);
+            c.width = 720; c.height = 960;
+            ctx.drawImage(v, 0, 0, 720, 960);
+            
             const raw = c.toDataURL('image/jpeg', 0.8);
+            document.getElementById('previewImg').src = raw;
+            document.getElementById('previewImg').classList.remove('hidden');
+            document.getElementById('retakeBtn').classList.remove('hidden');
             billImg = c.toDataURL('image/webp', 0.12);
 
             document.getElementById('status').classList.remove('hidden');
-            try {
-                const worker = await Tesseract.createWorker('eng');
-                const { data: { text } } = await worker.recognize(raw);
-                await worker.terminate();
+            
+            const worker = await Tesseract.createWorker('eng', 1, {
+                logger: m => { if(m.status === 'recognizing text') document.getElementById('status').innerText = `AI: ${Math.round(m.progress * 100)}%`; }
+            });
+            const { data: { text, lines } } = await worker.recognize(raw);
+            await worker.terminate();
 
-                const gst = text.match(/\d{2}[A-Z]{5}\d{4}[A-Z]{1}[A-Z\d]{1}[Z]{1}[A-Z\d]{1}/);
-                const amt = text.match(/(?:total|net|pay|sum)[:\s]*(\d+[\.,]\d{2})/i);
-                if(gst) document.getElementById('gstn').value = gst[0];
-                if(amt) {
-                    const row = document.querySelector('.item-row');
-                    row.querySelectorAll('input')[2].value = amt[1].replace(',','');
+            // 1. Organisation Name (Top of bill)
+            if(lines.length > 0) document.getElementById('org').value = lines[0].text.trim();
+
+            // 2. Date
+            const dateMatch = text.match(/\d{2}[\/-]\d{2}[\/-]\d{2,4}/);
+            if(dateMatch) document.getElementById('date').value = dateMatch[0].replace(/\//g, '-');
+
+            // 3. Invoice Number
+            const invMatch = text.match(/(?:inv|invoice|bill|no)[:\s#]*([A-Z0-9\/-]+)/i);
+            if(invMatch) document.getElementById('inv').value = invMatch[1];
+
+            // 4. GST Number
+            const gstMatch = text.match(/\d{2}[A-Z]{5}\d{4}[A-Z]{1}[A-Z\d]{1}[Z]{1}[A-Z\d]{1}/);
+            if(gstMatch) document.getElementById('gstn').value = gstMatch[0];
+
+            // 5, 6, 7. Multi-Item Extraction Logic
+            document.getElementById('itemsContainer').innerHTML = '<label class="text-[9px] font-black text-slate-400">5, 6, 7. MULTI-ITEM AUTO-LIST</label>';
+            lines.forEach(line => {
+                const lineText = line.text;
+                const priceMatch = lineText.match(/(\d+)[\s\*xX]+(\d+[\.,]\d{2})/); // Pattern: Qty x Price
+                if(priceMatch) {
+                    const name = lineText.replace(priceMatch[0], '').trim().substring(0, 20);
+                    addItemRow(name, priceMatch[1], priceMatch[2].replace(',',''));
                 }
-            } catch (e) { console.error(e); }
+            });
+
+            // 8. GST Charged
+            const taxMatch = text.match(/(?:gst|tax|cgst|sgst)[:\s]*(\d+[\.,]\d{2})/i);
+            if(taxMatch) document.getElementById('gstAmount').value = taxMatch[1].replace(',','');
+
             document.getElementById('status').classList.add('hidden');
             calculate();
         }
 
-        function addItemRow() {
+        function addItemRow(name = '', qty = 1, rate = 0) {
             const div = document.createElement('div');
             div.className = "item-row grid grid-cols-12 gap-2 mt-2";
-            div.innerHTML = `<input type="text" placeholder="Item" class="col-span-6 p-2 bg-slate-50 rounded-lg text-[10px] border-none"><input type="number" placeholder="Qty" oninput="calculate()" class="col-span-2 p-2 bg-slate-50 rounded-lg text-[10px] text-center border-none"><input type="number" placeholder="Rate" oninput="calculate()" class="col-span-4 p-2 bg-slate-50 rounded-lg text-[10px] text-center border-none">`;
+            div.innerHTML = `
+                <input type="text" value="${name}" placeholder="Item" class="col-span-6 p-2 bg-slate-50 rounded-lg text-[10px] border-none">
+                <input type="number" value="${qty}" oninput="calculate()" class="col-span-2 p-2 bg-slate-50 rounded-lg text-[10px] text-center border-none">
+                <input type="number" value="${rate}" oninput="calculate()" class="col-span-4 p-2 bg-slate-50 rounded-lg text-[10px] text-center border-none font-bold">
+            `;
             document.getElementById('itemsContainer').appendChild(div);
         }
 
@@ -160,15 +179,13 @@
         }
 
         function save() {
-            const editId = document.getElementById('editId').value;
             const items = [];
             document.querySelectorAll('.item-row').forEach(r => {
                 const i = r.querySelectorAll('input');
                 if(i[0].value) items.push({ n: i[0].value, q: i[1].value, r: i[2].value });
             });
-
             const entry = {
-                id: editId ? parseInt(editId) : Date.now(),
+                id: Date.now(),
                 date: document.getElementById('date').value,
                 org: document.getElementById('org').value,
                 inv: document.getElementById('inv').value,
@@ -177,92 +194,43 @@
                 gst: document.getElementById('gstAmount').value,
                 total: parseFloat(document.getElementById('totalLabel').innerText.replace('₹ ', '')),
                 type: document.getElementById('type').value,
-                img: billImg || (editId ? db.find(x => x.id == editId).img : null)
+                img: billImg
             };
-
-            if(editId) db = db.map(i => i.id == editId ? entry : i);
-            else db.push(entry);
-
-            localStorage.setItem('easygo_ledger_v35', JSON.stringify(db));
-            resetForm();
-            render();
-        }
-
-        function edit(id) {
-            const i = db.find(x => x.id == id);
-            document.getElementById('editId').value = i.id;
-            document.getElementById('date').value = i.date;
-            document.getElementById('org').value = i.org;
-            document.getElementById('inv').value = i.inv;
-            document.getElementById('gstn').value = i.gstn;
-            document.getElementById('gstAmount').value = i.gst;
-            document.getElementById('type').value = i.type;
-            
-            const cont = document.getElementById('itemsContainer');
-            cont.innerHTML = '<label class="text-[9px] font-black text-slate-400 uppercase">5, 6, 7. Items (Name | Qty | Rate)</label>';
-            i.items.forEach(it => {
-                const div = document.createElement('div');
-                div.className = "item-row grid grid-cols-12 gap-2 mt-2";
-                div.innerHTML = `<input type="text" value="${it.n}" class="col-span-6 p-2 bg-slate-50 rounded-lg text-[10px] border-none"><input type="number" value="${it.q}" oninput="calculate()" class="col-span-2 p-2 bg-slate-50 rounded-lg text-[10px] text-center border-none"><input type="number" value="${it.r}" oninput="calculate()" class="col-span-4 p-2 bg-slate-50 rounded-lg text-[10px] text-center border-none">`;
-                cont.appendChild(div);
-            });
-
-            document.getElementById('saveBtn').innerText = "Update Record";
-            document.getElementById('cancelBtn').classList.remove('hidden');
-            calculate();
-            window.scrollTo({ top: 350, behavior: 'smooth' });
+            db.push(entry);
+            localStorage.setItem('easygo_ledger_v37', JSON.stringify(db));
+            location.reload();
         }
 
         async function share(id) {
             const i = db.find(x => x.id === id);
-            const its = i.items.map(it => `${it.n}(${it.q}x${it.r})`).join(', ');
-            const msg = `EasyGo Ledger:\n1.Date:${i.date}\n2.Org:${i.org}\n3.Inv:${i.inv}\n4.GSTN:${i.gstn}\n5-7.Items:${its}\n8.GST:₹${i.gst}\n9.Total:₹${i.total.toFixed(2)}`;
+            const its = i.items.map(it => `${it.n}(${it.q}x${it.r})`).join('\n');
+            const msg = `EasyGo Tracker Record\nDate: ${i.date}\nOrg: ${i.org}\nInv: ${i.inv}\nGSTN: ${i.gstn}\nItems:\n${its}\nGST: ₹${i.gst}\nTotal: ₹${i.total.toFixed(2)}`;
             
-            if (i.img && navigator.canShare) {
+            if (i.img && navigator.share) {
                 const blob = await (await fetch(i.img)).blob();
                 const file = new File([blob], 'bill.webp', { type: 'image/webp' });
-                if (navigator.canShare({ files: [file] })) {
-                    await navigator.share({ files: [file], text: msg });
-                    return;
-                }
-            }
-            navigator.share({ text: msg });
-        }
-
-        function resetForm() {
-            document.getElementById('editId').value = "";
-            document.getElementById('org').value = "";
-            document.getElementById('inv').value = "";
-            document.getElementById('gstn').value = "";
-            document.getElementById('gstAmount').value = "";
-            document.getElementById('itemsContainer').innerHTML = `<label class="text-[9px] font-black text-slate-400 uppercase">5, 6, 7. Items (Name | Qty | Rate)</label><div class="item-row grid grid-cols-12 gap-2"><input type="text" placeholder="Item" class="col-span-6 p-2 bg-slate-50 rounded-lg text-[10px] border-none"><input type="number" placeholder="Qty" oninput="calculate()" class="col-span-2 p-2 bg-slate-50 rounded-lg text-[10px] text-center border-none"><input type="number" placeholder="Rate" oninput="calculate()" class="col-span-4 p-2 bg-slate-50 rounded-lg text-[10px] text-center border-none"></div>`;
-            document.getElementById('saveBtn').innerText = "Save Record";
-            document.getElementById('cancelBtn').classList.add('hidden');
-            billImg = null; calculate();
+                navigator.share({ files: [file], text: msg });
+            } else { navigator.share({ text: msg }); }
         }
 
         function render() {
             const cont = document.getElementById('list');
-            const s = document.getElementById('searchInput').value.toLowerCase();
             cont.innerHTML = '';
-            db.filter(i => (i.org+i.inv+i.gstn).toLowerCase().includes(s)).reverse().forEach(i => {
-                cont.innerHTML += `<div class="bg-white p-4 rounded-3xl border shadow-sm space-y-3">
-                    <div class="flex items-center gap-4">
-                        ${i.img ? `<img src="${i.img}" class="w-12 h-12 rounded-xl object-cover">` : `<div class="w-12 h-12 bg-slate-50 rounded-xl"></div>`}
-                        <div class="flex-1 min-w-0"><h4 class="font-black text-xs uppercase">${i.org || 'Vendor'}</h4><p class="text-[9px] text-slate-400 font-bold uppercase">${i.date} | INV:${i.inv}</p></div>
+            db.slice().reverse().forEach(i => {
+                cont.innerHTML += `<div class="bg-white p-4 rounded-3xl border shadow-sm flex items-center gap-4">
+                    <img src="${i.img || ''}" class="w-12 h-12 rounded-xl object-cover bg-slate-50">
+                    <div class="flex-1 min-w-0"><h4 class="font-black text-xs uppercase truncate">${i.org}</h4><p class="text-[9px] text-slate-400 font-bold uppercase">${i.date} | INV:${i.inv}</p></div>
+                    <div class="text-right">
                         <p class="font-black text-sm ${i.type === 'Earned' ? 'text-green-600' : 'text-red-500'}">₹${i.total.toFixed(2)}</p>
-                    </div>
-                    <div class="flex gap-2 border-t pt-2">
-                        <button onclick="edit(${i.id})" class="text-[9px] font-black uppercase text-blue-600 px-3 py-1 bg-blue-50 rounded-lg">Edit</button>
-                        <button onclick="share(${i.id})" class="text-[9px] font-black uppercase text-slate-600 px-3 py-1 bg-slate-100 rounded-lg">Share</button>
-                        <button onclick="remove(${i.id})" class="text-[9px] font-black uppercase text-red-500 px-3 py-1 bg-red-50 rounded-lg">Delete</button>
+                        <button onclick="share(${i.id})" class="text-[8px] font-bold text-slate-400">SHARE</button>
                     </div></div>`;
             });
         }
 
-        function remove(id) { if(confirm("Delete?")) { db = db.filter(x => x.id !== id); localStorage.setItem('easygo_ledger_v35', JSON.stringify(db)); render(); } }
+        function retake() { startCamera(); }
         document.getElementById('date').valueAsDate = new Date();
-        startCamera(); render();
+        startCamera();
+        render();
     </script>
 </body>
 </html>
