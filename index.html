@@ -24,20 +24,20 @@
 
     <div class="bg-banner"></div>
 
-    <div id="loginOverlay" class="fixed inset-0 z-[100] glass flex items-center justify-center p-6">
-        <div class="w-full max-w-sm space-y-6 text-center">
+    <div id="loginOverlay" class="fixed inset-0 z-[100] glass flex items-center justify-center p-6 text-center">
+        <div class="w-full max-w-sm space-y-6">
             <img src="https://raw.githubusercontent.com/Clean-Scripts/EasyGo-Expense-Tracker/refs/heads/main/logo.png" class="h-20 mx-auto rounded-2xl shadow-2xl">
             <h2 class="text-2xl font-black italic uppercase tracking-tighter">Easygo <span class="text-blue-600">Login</span></h2>
             
             <div id="phoneStep" class="space-y-4">
-                <input type="tel" id="userPhone" placeholder="Enter Mobile Number" class="w-full p-5 bg-slate-100 rounded-2xl text-lg font-bold text-center outline-none focus:ring-2 focus:ring-blue-600">
-                <button onclick="sendOTP()" class="w-full bg-blue-600 text-white font-black py-5 rounded-2xl uppercase tracking-widest shadow-xl">Get OTP</button>
+                <input type="tel" id="userPhone" placeholder="Enter Mobile Number" class="w-full p-5 bg-slate-100 rounded-2xl text-lg font-bold text-center border-none outline-none focus:ring-2 focus:ring-blue-600">
+                <button onclick="generateOTP()" class="w-full bg-blue-600 text-white font-black py-5 rounded-2xl uppercase tracking-widest shadow-xl">Get OTP</button>
             </div>
 
             <div id="otpStep" class="hidden space-y-4">
-                <input type="number" id="otpInput" placeholder="Enter OTP" class="w-full p-5 bg-slate-100 rounded-2xl text-lg font-bold text-center outline-none">
-                <p class="text-[10px] text-slate-400 font-bold uppercase">Hint: Use 1234 to Verify</p>
-                <button onclick="verifyOTP()" class="w-full bg-slate-900 text-white font-black py-5 rounded-2xl uppercase tracking-widest">Verify & Enter</button>
+                <input type="number" id="otpInput" placeholder="Enter OTP" class="w-full p-5 bg-slate-100 rounded-2xl text-lg font-bold text-center border-none outline-none">
+                <p class="text-[10px] text-slate-400 font-bold uppercase">Hint: Your OTP is the last 4 digits of your number.</p>
+                <button onclick="verifyOTP()" class="w-full bg-slate-900 text-white font-black py-5 rounded-2xl uppercase tracking-widest">Verify & Access Vault</button>
             </div>
         </div>
     </div>
@@ -51,13 +51,12 @@
     </header>
 
     <main id="appContent" class="max-w-xl mx-auto p-4 space-y-6 opacity-10 pointer-events-none transition-all duration-700">
-        
         <section class="relative rounded-[2.5rem] overflow-hidden shadow-2xl">
             <video id="video" autoplay playsinline></video>
             <img id="previewImg" class="hidden absolute top-0 left-0 z-10">
             <div class="absolute bottom-6 left-0 right-0 flex justify-center gap-4 z-20">
                 <button onclick="location.reload()" class="bg-black/60 backdrop-blur text-white px-5 py-2 rounded-full text-[10px] font-black uppercase tracking-widest">Retake</button>
-                <button onclick="processBill()" class="bg-white h-16 w-16 rounded-full border-4 border-blue-600 flex items-center justify-center shadow-xl active:scale-90 transition-transform">
+                <button onclick="processBill()" class="bg-white h-16 w-16 rounded-full border-4 border-blue-600 flex items-center justify-center shadow-xl">
                     <div class="h-10 w-10 bg-blue-600 rounded-full"></div>
                 </button>
             </div>
@@ -69,75 +68,66 @@
         </div>
 
         <section class="glass p-6 rounded-[2.5rem] shadow-2xl space-y-4 border border-white/50">
-            <div class="grid grid-cols-2 gap-3">
-                <input type="date" id="date" class="w-full p-3 bg-slate-100 rounded-xl text-xs font-bold border-none">
-                <select id="type" class="w-full p-3 bg-slate-100 rounded-xl text-xs font-black uppercase">
-                    <option value="Spent">Spent</option>
-                    <option value="Earned">Earned</option>
-                </select>
-            </div>
+            <input type="date" id="date" class="w-full p-3 bg-slate-100 rounded-xl text-xs font-bold border-none">
+            <input type="text" id="org" placeholder="Vendor Name" class="w-full p-4 bg-slate-100 rounded-xl text-xs font-black uppercase border-none">
             
-            <input type="text" id="org" placeholder="Vendor Name" class="w-full p-4 bg-slate-100 rounded-xl text-xs font-black uppercase">
-            
-            <div class="grid grid-cols-2 gap-3">
-                <input type="text" id="inv" placeholder="Invoice Number" class="w-full p-3 bg-slate-100 rounded-xl text-xs">
-                <input type="text" id="gstn" placeholder="GST Number" class="w-full p-3 bg-slate-100 rounded-xl text-xs uppercase">
-            </div>
-
             <div id="itemsContainer" class="space-y-2 border-t pt-4">
-                <div class="flex justify-between items-center">
-                    <label class="text-[9px] font-black text-slate-400 uppercase italic">Itemised Table</label>
+                <div class="flex justify-between items-center mb-2">
+                    <label class="text-[9px] font-black text-slate-400 uppercase italic tracking-widest">Itemised Table</label>
                     <button onclick="addItemRow()" class="text-blue-600 font-black text-[9px] bg-blue-50 px-3 py-1 rounded-lg shadow-sm">+ ADD</button>
                 </div>
             </div>
 
-            <div class="grid grid-cols-2 gap-3 border-t pt-4 items-center">
-                <input type="number" id="gstAmount" placeholder="GST Amt" oninput="calculate()" class="w-full p-3 bg-slate-100 rounded-xl text-xs font-bold">
-                <div class="bg-blue-600 rounded-2xl p-3 text-center text-white shadow-lg">
-                    <label class="text-[8px] font-black uppercase opacity-60 italic">9. Final Total</label>
-                    <h2 id="totalLabel" class="text-xl font-black italic">₹ 0.00</h2>
-                </div>
+            <div class="bg-blue-600 rounded-2xl p-4 text-center text-white shadow-lg">
+                <h2 id="totalLabel" class="text-2xl font-black italic">₹ 0.00</h2>
             </div>
 
-            <button id="saveBtn" onclick="save()" class="w-full bg-slate-900 text-white font-black py-5 rounded-2xl text-[10px] uppercase tracking-[0.3em] flex items-center justify-center gap-3 active:scale-95 transition-all">
+            <button id="saveBtn" onclick="save()" class="w-full bg-slate-900 text-white font-black py-5 rounded-2xl text-[10px] uppercase tracking-[0.3em] flex items-center justify-center gap-3">
                 <span id="saveText">Sync to Cloud</span>
                 <div id="saveLoader" class="hidden loading-ring"></div>
             </button>
         </section>
-
-        <button onclick="fetchHistory()" class="w-full py-4 glass border border-slate-200 rounded-2xl text-[10px] font-black uppercase tracking-widest text-slate-400 shadow-sm">Access My Vault History</button>
+        
+        <button onclick="fetchHistory()" class="w-full py-4 glass border border-slate-200 rounded-2xl text-[10px] font-black uppercase tracking-widest text-slate-400">Access My Private History</button>
         <div id="historyList" class="space-y-4"></div>
     </main>
 
     <canvas id="canvas" class="hidden"></canvas>
 
     <script>
-        // MASTER KEYS
+        // MASTER KEYS & IDS
         const PUBLIC_KEY = "gojfbxfj";
         const PRIVATE_KEY = "e636d3ba-d0fd-4186-98d8-b81a3f656ce3";
         const PROJECT_ID = "694d93d7afdf354b9be19888";
         const CLUSTER = "EasyGoCluster";
 
         let billImg = null;
-        let learningDict = JSON.parse(localStorage.getItem('eg_learning')) || {};
 
-        function sendOTP() {
-            if(document.getElementById('userPhone').value.length < 10) return alert("Enter 10-digit mobile number");
+        // --- NEW OTP LOGIC ---
+        function generateOTP() {
+            const phone = document.getElementById('userPhone').value;
+            if(phone.length < 10) return alert("Enter a valid 10-digit number");
             document.getElementById('phoneStep').classList.add('hidden');
             document.getElementById('otpStep').classList.remove('hidden');
         }
 
         function verifyOTP() {
             const phone = document.getElementById('userPhone').value;
-            if(document.getElementById('otpInput').value === "1234") {
+            const inputOtp = document.getElementById('otpInput').value;
+            const correctOtp = phone.slice(-4); // Logic: Last 4 digits
+
+            if(inputOtp === correctOtp) {
                 localStorage.setItem('eg_user', phone);
                 document.getElementById('loginOverlay').classList.add('hidden');
                 document.getElementById('appContent').classList.remove('opacity-10', 'pointer-events-none');
                 document.getElementById('displayPhone').innerText = "Vault ID: " + phone;
                 startCamera();
-            } else { alert("Try 1234"); }
+            } else {
+                alert("Incorrect OTP. Remember: It's the last 4 digits of your number.");
+            }
         }
 
+        // --- CAMERA & OCR ---
         async function startCamera() {
             const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
             document.getElementById('video').srcObject = stream;
@@ -147,9 +137,8 @@
             const v = document.getElementById('video');
             const c = document.getElementById('canvas');
             const ctx = c.getContext('2d');
-            c.width = 1600; c.height = 2000; // 200KB resolution target
+            c.width = 1600; c.height = 2000;
             ctx.drawImage(v, 0, 0, 1600, 2000);
-            
             document.getElementById('previewImg').src = c.toDataURL('image/jpeg', 0.9);
             document.getElementById('previewImg').classList.remove('hidden');
             document.getElementById('aiStatus').classList.remove('hidden');
@@ -161,31 +150,20 @@
 
             document.getElementById('rawTextTray').innerHTML = '';
             lines.forEach(line => {
-                const cleanText = line.text.replace(/[^a-zA-Z0-9\s₹/-]/g, '').trim(); // NO SPECIAL CHARS
-                if(cleanText.length < 2) return;
-
+                const clean = line.text.replace(/[^a-zA-Z0-9\s₹/-]/g, '').trim();
+                if(clean.length < 2) return;
                 const span = document.createElement('span');
-                span.className = "bg-white px-2 py-1 rounded border text-[9px] shadow-sm font-black uppercase active:bg-blue-100";
-                span.innerText = cleanText;
-                span.onclick = () => { navigator.clipboard.writeText(cleanText); alert('Copied'); };
+                span.className = "bg-white px-2 py-1 rounded border text-[9px] shadow-sm font-bold uppercase";
+                span.innerText = clean;
+                span.onclick = () => { navigator.clipboard.writeText(clean); alert('Copied'); };
                 document.getElementById('rawTextTray').appendChild(span);
-
-                // SELF-LEARNING LOGIC
-                Object.keys(learningDict).forEach(key => {
-                    if(cleanText.toUpperCase().includes(key.toUpperCase())) document.getElementById('org').value = learningDict[key];
-                });
-
-                if (cleanText.length > 8 && !document.getElementById('org').value) document.getElementById('org').value = cleanText;
-                const m = cleanText.match(/(.*?)\s+(\d+)\s+(\d+)/);
-                if(m && m[3] > 10) addItemRow(m[1].trim(), m[2], m[3]);
             });
-            calculate();
         }
 
         function addItemRow(n='', q=1, r=0) {
             const div = document.createElement('div');
             div.className = "item-row grid grid-cols-12 gap-2 mt-1";
-            div.innerHTML = `<input type="text" value="${n}" class="col-span-6 p-2 bg-slate-100 rounded-lg text-[10px] font-bold"><input type="number" value="${q}" oninput="calculate()" class="col-span-2 p-2 bg-slate-100 rounded-lg text-[10px] text-center font-bold"><input type="number" value="${r}" oninput="calculate()" class="col-span-4 p-2 bg-slate-100 rounded-lg text-[10px] text-center font-black">`;
+            div.innerHTML = `<input type="text" value="${n}" class="col-span-6 p-2 bg-slate-100 rounded-lg text-[10px]"><input type="number" value="${q}" oninput="calculate()" class="col-span-2 p-2 bg-slate-100 rounded-lg text-[10px] text-center"><input type="number" value="${r}" oninput="calculate()" class="col-span-4 p-2 bg-slate-100 rounded-lg text-[10px] text-center font-bold">`;
             document.getElementById('itemsContainer').appendChild(div);
         }
 
@@ -195,19 +173,16 @@
                 const i = r.querySelectorAll('input');
                 total += (parseFloat(i[1].value) || 0) * (parseFloat(i[2].value) || 0);
             });
-            const gst = parseFloat(document.getElementById('gstAmount').value) || 0;
-            document.getElementById('totalLabel').innerText = "₹ " + (total + gst).toFixed(2);
+            document.getElementById('totalLabel').innerText = "₹ " + total.toFixed(2);
         }
 
+        // --- CORRECTED SAVE LOGIC ---
         async function save() {
             const uid = localStorage.getItem('eg_user');
             const saveBtn = document.getElementById('saveBtn');
-            const saveText = document.getElementById('saveText');
-            const saveLoader = document.getElementById('saveLoader');
-
             saveBtn.disabled = true;
-            saveText.innerText = "SYNCING...";
-            saveLoader.classList.remove('hidden');
+            document.getElementById('saveText').innerText = "SYNCING...";
+            document.getElementById('saveLoader').classList.remove('hidden');
 
             const items = [];
             document.querySelectorAll('.item-row').forEach(r => {
@@ -215,62 +190,33 @@
                 if(i[0].value) items.push({ n: i[0].value, q: i[1].value, r: i[2].value });
             });
 
-            const orgVal = document.getElementById('org').value;
-            if(orgVal) {
-                learningDict[orgVal.slice(0, 5).toUpperCase()] = orgVal;
-                localStorage.setItem('eg_learning', JSON.stringify(learningDict));
-            }
-
             const doc = { 
-                uid: uid, date: document.getElementById('date').value, org: orgVal, 
-                inv: document.getElementById('inv').value, gstn: document.getElementById('gstn').value, 
+                uid: uid, date: document.getElementById('date').value, 
+                org: document.getElementById('org').value, 
                 items: items, total: document.getElementById('totalLabel').innerText, image: billImg 
             };
 
             try {
-                const res = await fetch(`https://cloud.mongodb.com/api/atlas/v1.0/groups/${PROJECT_ID}/clusters/${CLUSTER}/data/insertOne`, {
+                const response = await fetch(`https://cloud.mongodb.com/api/atlas/v1.0/groups/694d93d7afdf354b9be19888/clusters/EasyGoCluster/data/insertOne`, {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json', 'Authorization': 'Basic ' + btoa(`${PUBLIC_KEY}:${PRIVATE_KEY}`) },
-                    // UPDATED TARGET DATABASE & COLLECTION
-                    body: JSON.stringify({ database: "EasyGoTracker", collection: "expenses", document: doc })
+                    headers: { 
+                        'Content-Type': 'application/json', 
+                        'Authorization': 'Basic ' + btoa('gojfbxfj:e636d3ba-d0fd-4186-98d8-b81a3f656ce3') 
+                    },
+                    body: JSON.stringify({ 
+                        database: "EasyGoTracker", 
+                        collection: "expenses", 
+                        document: doc 
+                    })
                 });
-                
-                if(res.ok) { alert("✅ RECORD SECURED IN CLOUD"); location.reload(); }
+                if(response.ok) { alert("✅ SUCCESS: Bill saved!"); location.reload(); }
                 else { throw new Error(); }
             } catch(e) {
-                alert("❌ SYNC FAILED. Check Network Access status.");
+                alert("❌ SYNC FAILED. Check if 0.0.0.0/0 is ACTIVE.");
                 saveBtn.disabled = false;
-                saveText.innerText = "Sync to Cloud";
-                saveLoader.classList.add('hidden');
+                document.getElementById('saveText').innerText = "Sync to Cloud";
+                document.getElementById('saveLoader').classList.add('hidden');
             }
-        }
-
-        async function fetchHistory() {
-            const uid = localStorage.getItem('eg_user');
-            const list = document.getElementById('historyList');
-            list.innerHTML = '<p class="text-[10px] text-center italic animate-pulse">ACCESSING CLOUD VAULT...</p>';
-
-            const res = await fetch(`https://cloud.mongodb.com/api/atlas/v1.0/groups/${PROJECT_ID}/clusters/${CLUSTER}/data/find`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json', 'Authorization': 'Basic ' + btoa(`${PUBLIC_KEY}:${PRIVATE_KEY}`) },
-                body: JSON.stringify({ database: "EasyGoTracker", collection: "expenses", filter: { uid: uid } })
-            });
-            const data = await res.json();
-            list.innerHTML = '';
-            if(!data.documents.length) list.innerHTML = '<p class="text-[10px] text-center uppercase tracking-widest text-slate-500">No records found for this number.</p>';
-            
-            data.documents.reverse().forEach(d => {
-                const card = document.createElement('div');
-                card.className = "glass p-4 rounded-3xl border border-slate-200 shadow-md flex justify-between items-center mb-3";
-                card.innerHTML = `<div><p class="text-[8px] font-black text-blue-500 italic uppercase">${d.date}</p><h4 class="text-xs font-black uppercase text-slate-700">${d.org}</h4><p class="text-xs font-black text-slate-900">${d.total}</p></div><button onclick='shareBill(${JSON.stringify(d)})' class="bg-green-500 p-3 rounded-2xl text-white shadow-lg">Share</button>`;
-                list.appendChild(card);
-            });
-        }
-
-        function shareBill(d) {
-            const items = d.items.map(i => `- ${i.n}: ${i.q} x ${i.r}`).join('\n');
-            const msg = `*Easygo Expense Report*\n------------------\n*Vendor:* ${d.org}\n*Date:* ${d.date}\n*Amount:* ${d.total}\n*Items:*\n${items}`;
-            window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`);
         }
 
         document.getElementById('date').valueAsDate = new Date();
