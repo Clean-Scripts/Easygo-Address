@@ -3,9 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>EasyGo | Delivery Charges </title>
+    <title>EasyGo | Delivery Charges</title>
     <!-- Favicon -->
-    <link rel="icon" type="image/x-icon" href="https://cdn-icons-png.flaticon.com/512/684/684908.png">
+    <link rel="icon" type="image/x-icon" href="https://raw.githubusercontent.com/Clean-Scripts/EasyGo-Address/refs/heads/main/logo.png">
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
@@ -44,22 +44,13 @@
             from { transform: translateY(20px); opacity: 0; }
             to { transform: translateY(0); opacity: 1; }
         }
-        /* Banner Background */
+        /* Banner Background - NO BLUE OVERLAY */
         .banner-bg {
             background-image: url('https://raw.githubusercontent.com/Clean-Scripts/EasyGo-Address/refs/heads/main/Banner.png');
             background-size: cover;
             background-position: center;
             background-attachment: fixed;
             position: relative;
-        }
-        .banner-overlay {
-            background: linear-gradient(135deg, rgba(37, 99, 235, 0.95) 0%, rgba(79, 70, 229, 0.95) 100%);
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            z-index: 0;
         }
         .content-wrapper {
             position: relative;
@@ -92,6 +83,92 @@
             padding: 1rem;
             margin: 1rem 0;
         }
+        .input-highlight {
+            transition: all 0.3s ease;
+        }
+        .input-highlight:focus {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+        }
+        .step-indicator {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            margin-right: 10px;
+        }
+        .step-active {
+            background-color: #3b82f6;
+            color: white;
+        }
+        .step-inactive {
+            background-color: #e5e7eb;
+            color: #6b7280;
+        }
+        .tooltip {
+            position: relative;
+            display: inline-block;
+        }
+        .tooltip .tooltiptext {
+            visibility: hidden;
+            width: 200px;
+            background-color: #1f2937;
+            color: #fff;
+            text-align: center;
+            border-radius: 6px;
+            padding: 8px;
+            position: absolute;
+            z-index: 1;
+            bottom: 125%;
+            left: 50%;
+            margin-left: -100px;
+            opacity: 0;
+            transition: opacity 0.3s;
+            font-size: 12px;
+        }
+        .tooltip:hover .tooltiptext {
+            visibility: visible;
+            opacity: 1;
+        }
+        .floating-label {
+            position: relative;
+            margin-bottom: 20px;
+        }
+        .floating-label input:focus ~ label,
+        .floating-label input:not(:placeholder-shown) ~ label {
+            top: -10px;
+            font-size: 12px;
+            color: #3b82f6;
+            background: white;
+            padding: 0 5px;
+        }
+        .floating-label label {
+            position: absolute;
+            left: 12px;
+            top: 12px;
+            color: #6b7280;
+            transition: all 0.3s;
+            pointer-events: none;
+        }
+        .shake {
+            animation: shake 0.5s;
+        }
+        @keyframes shake {
+            0%, 100% {transform: translateX(0);}
+            10%, 30%, 50%, 70%, 90% {transform: translateX(-5px);}
+            20%, 40%, 60%, 80% {transform: translateX(5px);}
+        }
+        .confetti {
+            position: fixed;
+            width: 10px;
+            height: 10px;
+            background-color: #f00;
+            opacity: 0;
+            z-index: 9999;
+        }
     </style>
 </head>
 <body class="min-h-screen banner-bg">
@@ -99,68 +176,82 @@
     <div id="orderVerificationModal" class="modal">
         <div class="modal-content">
             <div class="text-center mb-6">
-                <div class="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <i class="fas fa-shield-alt text-3xl text-blue-600"></i>
+                <div class="w-16 h-16 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <i class="fas fa-lock text-2xl text-white"></i>
                 </div>
-                <h2 class="text-2xl font-bold text-gray-800 mb-2">Order Verification Required</h2>
-                <p class="text-gray-600">For Security Purposes, Please Verify your Order Details</p>
+                <h2 class="text-2xl font-bold text-gray-800 mb-2">🎉 Welcome to EasyGo! 🎉</h2>
+                <p class="text-gray-600">First, Let's Verify your Order Details for Security</p>
+            </div>
+            
+            <!-- Progress Steps -->
+            <div class="flex items-center justify-center mb-8">
+                <div class="flex items-center">
+                    <div class="step-indicator step-active">
+                        1
+                    </div>
+                    <div class="h-1 w-20 bg-blue-500"></div>
+                    <div class="step-indicator step-inactive">
+                        2
+                    </div>
+                    <div class="h-1 w-20 bg-gray-300"></div>
+                    <div class="step-indicator step-inactive">
+                        3
+                    </div>
+                </div>
             </div>
             
             <div class="security-note">
                 <div class="flex items-start">
-                    <i class="fas fa-exclamation-triangle text-red-500 mt-1 mr-3"></i>
+                    <i class="fas fa-shield-alt text-blue-500 mt-1 mr-3"></i>
                     <div>
-                        <h4 class="font-bold text-red-700 mb-1">IMPORTANT SECURITY NOTICE</h4>
-                        <p class="text-red-600 text-sm">
-                            ⚠️ IMPORTANT:﻿Amount must Match Exactly.
-                            💸 Wrong Total = No Order / No Refund.
-                                Stay Secure, with Easy Go! 🛡️
+                        <h4 class="font-bold text-blue-700 mb-1">🎁 Special Delivery Offer!</h4>
+                        <p class="text-blue-600 text-sm">
+                            Orders within 4km from Prime Square: 
+                            <span class="font-bold">FREE Delivery if your order value Exceeds ₹199!</span>
                         </p>
                     </div>
                 </div>
             </div>
             
             <div class="mb-6">
-                <label class="block text-gray-700 mb-2 font-medium" for="orderAmount">
-                    <i class="fas fa-rupee-sign text-blue-500 mr-2"></i>Order Amount (₹)
-                </label>
-                <input type="number" id="orderAmount" 
-                       class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
-                       placeholder="Enter exact order amount" min="0" step="0.01">
-                <p class="text-sm text-gray-500 mt-1">Enter the exact amount you paid through Razorpay</p>
+                <div class="floating-label">
+                    <input type="number" id="orderAmount" 
+                           class="w-full p-4 border-2 border-gray-300 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition input-highlight"
+                           placeholder=" "
+                           min="0" step="0.01">
+                    <label for="orderAmount">
+                        <i class="fas fa-rupee-sign mr-2"></i>Order Amount (₹)
+                    </label>
+                </div>
+                <p class="text-sm text-gray-500 mt-2 flex items-center">
+                    <i class="fas fa-info-circle mr-2 text-blue-500"></i>
+                    Enter the Exact Amount you Paid through Razorpay
+                </p>
             </div>
             
             <div class="mb-6">
-                <label class="block text-gray-700 mb-2 font-medium" for="orderId">
-                    <i class="fas fa-receipt text-blue-500 mr-2"></i>Razorpay Order ID / Transaction ID
-                </label>
-                <input type="text" id="orderId" 
-                       class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
-                       placeholder="Enter your Razorpay Order ID">
-                <p class="text-sm text-gray-500 mt-1">Found in your Razorpay receipt or bank statement</p>
-            </div>
-            
-            <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
-                <h4 class="font-bold text-blue-800 mb-2 flex items-center">
-                    <i class="fas fa-question-circle mr-2"></i>How to verify from Razorpay?
-                </h4>
-                <ol class="text-sm text-blue-700 list-decimal pl-5 space-y-1">
-                    <li>Login to your Razorpay account</li>
-                    <li>Go to "Transactions" section</li>
-                    <li>Find your recent payment</li>
-                    <li>Copy the Order ID and Amount</li>
-                    <li>Enter exact details here for verification</li>
-                </ol>
+                <div class="floating-label">
+                    <input type="text" id="orderId" 
+                           class="w-full p-4 border-2 border-gray-300 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition input-highlight"
+                           placeholder=" ">
+                    <label for="orderId">
+                        <i class="fas fa-receipt mr-2"></i>Razorpay Order ID / Transaction ID
+                    </label>
+                </div>
+                <p class="text-sm text-gray-500 mt-2 flex items-center">
+                    <i class="fas fa-search mr-2 text-blue-500"></i>
+                    Found in your Razorpay Receipt or Bank Statement
+                </p>
             </div>
             
             <div class="flex flex-col sm:flex-row gap-3">
                 <button id="verifyOrderBtn" 
-                        class="flex-1 flex items-center justify-center gap-2 p-3 bg-gradient-to-r from-green-600 to-emerald-600 text-white font-bold rounded-lg hover:from-green-700 hover:to-emerald-700 transition">
+                        class="flex-1 flex items-center justify-center gap-3 p-4 bg-gradient-to-r from-green-500 to-emerald-500 text-white font-bold rounded-lg hover:from-green-600 hover:to-emerald-600 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-1">
                     <i class="fas fa-check-circle"></i>
                     <span>Verify & Continue</span>
                 </button>
                 <button id="cancelVerificationBtn" 
-                        class="flex-1 flex items-center justify-center gap-2 p-3 bg-gray-200 text-gray-700 font-medium rounded-lg hover:bg-gray-300 transition">
+                        class="flex-1 flex items-center justify-center gap-2 p-4 bg-gray-100 text-gray-700 font-medium rounded-lg hover:bg-gray-200 transition">
                     <i class="fas fa-times"></i>
                     <span>Cancel</span>
                 </button>
@@ -172,210 +263,227 @@
         </div>
     </div>
     
-    <div class="banner-overlay"></div>
     <div class="content-wrapper min-h-screen p-4 md:p-6">
-        <div class="max-w-5xl mx-auto">
+        <div class="max-w-6xl mx-auto">
             <!-- Header with Logo -->
             <header class="mb-8 text-center">
                 <div class="flex flex-col items-center mb-4">
                     <!-- Logo -->
-                    <div class="flex items-center justify-center gap-3 mb-4">
-                        <div class="w-14 h-14 bg-white rounded-full flex items-center justify-center shadow-lg">
+                    <div class="flex items-center justify-center gap-4 mb-6">
+                        <div class="w-20 h-20 bg-gradient-to-r from-blue-500 to-purple-500 rounded-2xl flex items-center justify-center shadow-2xl transform hover:scale-105 transition-transform duration-300">
                             <img src="https://raw.githubusercontent.com/Clean-Scripts/EasyGo-Address/refs/heads/main/logo.png" 
-                                 alt="EasyGo Logo" class="w-10 h-10 object-contain" onerror="this.style.display='none'">
+                                 alt="EasyGo Logo" class="w-14 h-14 object-contain" onerror="this.style.display='none'">
                         </div>
-                        <div>
-                            <h1 class="text-3xl md:text-4xl font-bold text-white mb-1">EasyGo-Address</h1>
-                            <p class="text-blue-100">Secure Delivery Solutions</p>
+                        <div class="text-left">
+                            <h1 class="text-4xl md:text-5xl font-bold text-white mb-2 drop-shadow-lg">EasyGo-Address</h1>
+                            <p class="text-white/90 text-lg">🚀 Smart Delivery Solutions</p>
                         </div>
                     </div>
                 </div>
-                <p class="text-white/90 text-lg">Get Estimated Delivery Charge</p>
-                <div class="mt-2 inline-flex items-center bg-white/20 text-white/90 px-3 py-1 rounded-full text-sm">
-                    <i class="fas fa-shield-alt mr-2"></i>
-                    <span>Secure Order Verification Enabled</span>
+                
+                <!-- Progress Bar -->
+                <div class="max-w-md mx-auto mb-6">
+                    <div class="flex items-center justify-between mb-2">
+                        <span class="text-white text-sm">Step 1: Verify Order</span>
+                        <span class="text-white text-sm">Step 2: Enter Address</span>
+                        <span class="text-white text-sm">Step 3: Get Charges</span>
+                    </div>
+                    <div class="w-full bg-white/30 h-2 rounded-full overflow-hidden">
+                        <div id="progressBar" class="h-full bg-gradient-to-r from-green-400 to-blue-500 transition-all duration-500" style="width: 33%"></div>
+                    </div>
                 </div>
             </header>
 
-            <div class="flex flex-col lg:flex-row gap-6">
+            <div class="flex flex-col lg:flex-row gap-8">
                 <!-- Left Column: Address Form -->
                 <div class="lg:w-1/2">
-                    <div class="bg-white/95 backdrop-blur-sm rounded-2xl shadow-2xl p-6 mb-6 slide-in">
-                        <div class="flex items-center justify-between mb-6">
-                            <h2 class="text-2xl font-bold text-gray-800 flex items-center">
-                                <i class="fas fa-address-card text-blue-600 mr-3"></i>Address Details
+                    <div class="bg-white/95 backdrop-blur-sm rounded-2xl shadow-2xl p-8 mb-6 slide-in border border-white/20">
+                        <div class="flex items-center justify-between mb-8">
+                            <h2 class="text-3xl font-bold text-gray-800 flex items-center">
+                                <i class="fas fa-map-marker-alt text-blue-500 mr-3 bg-blue-100 p-3 rounded-full"></i>
+                                Address Details
                             </h2>
-                            <div class="text-sm bg-green-100 text-green-800 px-3 py-1 rounded-full">
-                                <i class="fas fa-check-circle mr-1"></i>
-                                <span id="verificationStatus">Order Verified</span>
-                            </div>
-                        </div>
-                        
-                        <!-- Verified Order Info -->
-                        <div id="verifiedOrderInfo" class="mb-6 p-4 bg-gradient-to-r from-green-50 to-blue-50 border border-green-200 rounded-xl">
-                            <div class="flex items-center justify-between">
-                                <div>
-                                    <h3 class="font-bold text-green-800 mb-1 flex items-center">
-                                        <i class="fas fa-badge-check mr-2"></i>Order Verified Successfully
-                                    </h3>
-                                    <p class="text-green-700">
-                                        Order ID: <span id="displayOrderId" class="font-bold">ORD123456</span> | 
-                                        Amount: <span id="displayOrderAmount" class="font-bold">₹0.00</span>
-                                    </p>
-                                </div>
-                                <button id="editOrderBtn" class="text-blue-600 hover:text-blue-800 text-sm font-medium">
-                                    <i class="fas fa-edit mr-1"></i>Edit
-                                </button>
-                            </div>
-                        </div>
-                        
-                        <!-- Offer Alert -->
-                        <div class="mb-6 p-4 bg-gradient-to-r from-yellow-50 to-orange-50 border border-yellow-200 rounded-xl">
-                            <div class="flex items-start">
-                                <i class="fas fa-gift text-orange-600 text-xl mt-1 mr-3"></i>
-                                <div>
-                                    <h3 class="font-bold text-orange-800 mb-1">Special Offer Alert!</h3>
-                                    <p class="text-orange-700">
-                                        Orders within 4km from Prime Square, Omaxe City 1, Indore: 
-                                        <span class="font-bold">Will be Free if Exceed Cost: ₹199/-</span>
-                                    </p>
+                            <div id="verifiedBadge" class="hidden">
+                                <div class="flex items-center gap-2 bg-gradient-to-r from-green-100 to-emerald-100 text-green-800 px-4 py-2 rounded-full shadow">
+                                    <i class="fas fa-badge-check text-green-600"></i>
+                                    <span class="font-bold">Order Verified</span>
+                                    <span id="orderAmountBadge" class="bg-green-600 text-white px-2 py-1 rounded-full text-sm">₹0</span>
                                 </div>
                             </div>
                         </div>
                         
                         <!-- Address Form -->
-                        <form id="addressForm">
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <form id="addressForm" class="space-y-6">
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 <!-- Name -->
                                 <div class="md:col-span-2">
-                                    <label class="block text-gray-700 mb-2 font-medium" for="name">
-                                        <i class="fas fa-user text-blue-500 mr-2"></i>Full Name
-                                    </label>
-                                    <input type="text" id="name" required 
-                                           class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition bg-white/80"
-                                           placeholder="Enter your full name">
+                                    <div class="floating-label">
+                                        <input type="text" id="name" required 
+                                               class="w-full p-4 border-2 border-gray-300 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition input-highlight"
+                                               placeholder=" "
+                                               pattern="[A-Za-z\s]{3,}">
+                                        <label for="name">
+                                            <i class="fas fa-user text-blue-500 mr-2"></i>Full Name *
+                                        </label>
+                                    </div>
+                                    <div class="text-sm text-gray-500 mt-2 flex items-center">
+                                        <i class="fas fa-star text-red-400 mr-1"></i>
+                                        <span>Required field</span>
+                                    </div>
                                 </div>
                                 
                                 <!-- Phone Number -->
                                 <div class="md:col-span-2">
-                                    <label class="block text-gray-700 mb-2 font-medium" for="phone">
-                                        <i class="fas fa-phone text-blue-500 mr-2"></i>Phone Number
-                                    </label>
-                                    <input type="tel" id="phone" required 
-                                           class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition bg-white/80"
-                                           placeholder="Enter your 10-digit phone number">
+                                    <div class="floating-label">
+                                        <input type="tel" id="phone" required 
+                                               class="w-full p-4 border-2 border-gray-300 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition input-highlight"
+                                               placeholder=" "
+                                               pattern="[0-9]{10}">
+                                        <label for="phone">
+                                            <i class="fas fa-phone text-blue-500 mr-2"></i>Phone Number *
+                                        </label>
+                                    </div>
+                                    <div class="text-sm text-gray-500 mt-2 flex items-center">
+                                        <i class="fas fa-star text-red-400 mr-1"></i>
+                                        <span>10-Digit Mobile Number Required</span>
+                                    </div>
                                 </div>
                                 
                                 <!-- Address Type -->
                                 <div>
-                                    <label class="block text-gray-700 mb-2 font-medium" for="addressType">
-                                        <i class="fas fa-home text-blue-500 mr-2"></i>Address Type
-                                    </label>
-                                    <select id="addressType" 
-                                            class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition bg-white/80">
-                                        <option value="Flat">Flat</option>
-                                        <option value="Hostel">Hostel</option>
-                                        <option value="House">House</option>
-                                        <option value="Office">Office</option>
-                                        <option value="PG">P.G.</option>
-                                    </select>
+                                    <div class="floating-label">
+                                        <select id="addressType" required
+                                                class="w-full p-4 border-2 border-gray-300 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition input-highlight appearance-none bg-white">
+                                            <option value="" disabled selected></option>
+                                            <option value="Flat">🏢 Flat</option>
+                                            <option value="Hostel">🏫 Hostel</option>
+                                            <option value="House">🏠 House</option>
+                                            <option value="Office">💼 Office</option>
+                                            <option value="PG">🛏️ P.G.</option>
+                                        </select>
+                                        <label for="addressType">
+                                            <i class="fas fa-home text-blue-500 mr-2"></i>Address Type *
+                                        </label>
+                                    </div>
                                 </div>
                                 
                                 <!-- Flat/House Number -->
                                 <div>
-                                    <label class="block text-gray-700 mb-2 font-medium" for="houseNumber">
-                                        <i class="fas fa-building text-blue-500 mr-2"></i>Flat/House/Office Number
-                                    </label>
-                                    <input type="text" id="houseNumber" required 
-                                           class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition bg-white/80"
-                                           placeholder="e.g., B-102">
+                                    <div class="floating-label">
+                                        <input type="text" id="houseNumber" required 
+                                               class="w-full p-4 border-2 border-gray-300 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition input-highlight"
+                                               placeholder=" ">
+                                        <label for="houseNumber">
+                                            <i class="fas fa-building text-blue-500 mr-2"></i>Flat/House/Office No. *
+                                        </label>
+                                    </div>
                                 </div>
                                 
                                 <!-- Floor Number -->
                                 <div>
-                                    <label class="block text-gray-700 mb-2 font-medium" for="floorNumber">
-                                        <i class="fas fa-stairs text-blue-500 mr-2"></i>Floor No.
-                                    </label>
-                                    <input type="text" id="floorNumber" 
-                                           class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition bg-white/80"
-                                           placeholder="e.g., 2nd Floor">
+                                    <div class="floating-label">
+                                        <input type="text" id="floorNumber" 
+                                               class="w-full p-4 border-2 border-gray-300 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition input-highlight"
+                                               placeholder=" ">
+                                        <label for="floorNumber">
+                                            <i class="fas fa-stairs text-blue-500 mr-2"></i>Floor No.
+                                        </label>
+                                    </div>
                                 </div>
                                 
                                 <!-- Locality -->
                                 <div class="md:col-span-2">
-                                    <label class="block text-gray-700 mb-2 font-medium" for="locality">
-                                        <i class="fas fa-location-dot text-blue-500 mr-2"></i>Locality
-                                    </label>
-                                    <input type="text" id="locality" required 
-                                           class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition bg-white/80"
-                                           placeholder="Enter your locality">
+                                    <div class="floating-label">
+                                        <input type="text" id="locality" required 
+                                               class="w-full p-4 border-2 border-gray-300 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition input-highlight"
+                                               placeholder=" ">
+                                        <label for="locality">
+                                            <i class="fas fa-location-dot text-blue-500 mr-2"></i>Locality *
+                                        </label>
+                                    </div>
                                 </div>
                                 
                                 <!-- Street Name -->
                                 <div class="md:col-span-2">
-                                    <label class="block text-gray-700 mb-2 font-medium" for="street">
-                                        <i class="fas fa-road text-blue-500 mr-2"></i>Street Name
-                                    </label>
-                                    <input type="text" id="street" required 
-                                           class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition bg-white/80"
-                                           placeholder="Enter street name">
+                                    <div class="floating-label">
+                                        <input type="text" id="street" required 
+                                               class="w-full p-4 border-2 border-gray-300 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition input-highlight"
+                                               placeholder=" ">
+                                        <label for="street">
+                                            <i class="fas fa-road text-blue-500 mr-2"></i>Street Name *
+                                        </label>
+                                    </div>
                                 </div>
                                 
                                 <!-- Pincode -->
                                 <div>
-                                    <label class="block text-gray-700 mb-2 font-medium" for="pincode">
-                                        <i class="fas fa-map-pin text-blue-500 mr-2"></i>Pincode
-                                    </label>
-                                    <input type="text" id="pincode" required maxlength="6"
-                                           class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition bg-white/80"
-                                           placeholder="6-digit pincode">
+                                    <div class="floating-label">
+                                        <input type="text" id="pincode" required maxlength="6"
+                                               class="w-full p-4 border-2 border-gray-300 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition input-highlight"
+                                               placeholder=" "
+                                               pattern="[0-9]{6}">
+                                        <label for="pincode">
+                                            <i class="fas fa-map-pin text-blue-500 mr-2"></i>Pin-Code *
+                                        </label>
+                                    </div>
                                 </div>
                                 
                                 <!-- City (auto-filled) -->
                                 <div>
-                                    <label class="block text-gray-700 mb-2 font-medium" for="city">
-                                        <i class="fas fa-city text-blue-500 mr-2"></i>City
-                                    </label>
-                                    <input type="text" id="city" readonly
-                                           class="w-full p-3 border border-gray-300 rounded-lg bg-gray-50/80"
-                                           placeholder="Will auto-fetch from pincode">
+                                    <div class="floating-label">
+                                        <input type="text" id="city" readonly
+                                               class="w-full p-4 border-2 border-gray-300 rounded-lg bg-gray-50/80"
+                                               placeholder=" ">
+                                        <label for="city">
+                                            <i class="fas fa-city text-blue-500 mr-2"></i>City
+                                        </label>
+                                    </div>
                                 </div>
                                 
                                 <!-- State (auto-filled) -->
                                 <div class="md:col-span-2">
-                                    <label class="block text-gray-700 mb-2 font-medium" for="state">
-                                        <i class="fas fa-flag text-blue-500 mr-2"></i>State
-                                    </label>
-                                    <input type="text" id="state" readonly
-                                           class="w-full p-3 border border-gray-300 rounded-lg bg-gray-50/80"
-                                           placeholder="Will auto-fetch from pincode">
+                                    <div class="floating-label">
+                                        <input type="text" id="state" readonly
+                                               class="w-full p-4 border-2 border-gray-300 rounded-lg bg-gray-50/80"
+                                               placeholder=" ">
+                                        <label for="state">
+                                            <i class="fas fa-flag text-blue-500 mr-2"></i>State
+                                        </label>
+                                    </div>
                                 </div>
                                 
                                 <!-- Special Request Note -->
                                 <div class="md:col-span-2">
-                                    <label class="block text-gray-700 mb-2 font-medium" for="specialRequest">
-                                        <i class="fas fa-sticky-note text-blue-500 mr-2"></i>Special Request Note
-                                        <span class="text-sm text-gray-500 font-normal">(IF ANY - Do not make any un-necessary requests)</span>
-                                    </label>
-                                    <textarea id="specialRequest" 
-                                              class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition bg-white/80"
-                                              rows="3"
-                                              placeholder="Any special instructions for delivery (e.g., call before delivery, leave at security, etc.)"></textarea>
-                                    <p class="text-xs text-gray-500 mt-1">
-                                        Please note: Unnecessary requests may delay your delivery or incur additional charges.
-                                    </p>
+                                    <div class="floating-label">
+                                        <textarea id="specialRequest" 
+                                                  class="w-full p-4 border-2 border-gray-300 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition input-highlight resize-none"
+                                                  rows="3"
+                                                  placeholder=" "></textarea>
+                                        <label for="specialRequest">
+                                            <i class="fas fa-sticky-note text-blue-500 mr-2"></i>Special Request Note
+                                            <span class="text-sm text-gray-500 font-normal">(IF ANY)</span>
+                                        </label>
+                                    </div>
+                                    <div class="mt-2 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+                                        <p class="text-sm text-yellow-700 flex items-center">
+                                            <i class="fas fa-exclamation-triangle mr-2 text-yellow-500"></i>
+                                            Please Avoid Unnecessary Requests. Additional Charges may apply for Special Requests.
+                                        </p>
+                                    </div>
                                 </div>
                             </div>
                             
                             <!-- Location Button -->
-                            <div class="mt-6">
+                            <div class="mt-8">
                                 <button type="button" id="getLocationBtn" 
-                                        class="w-full flex items-center justify-center gap-2 p-4 bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-semibold rounded-lg hover:from-blue-700 hover:to-indigo-700 transition-all duration-300 shadow-lg hover:shadow-xl pulse">
-                                    <i class="fas fa-map-marker-alt"></i>
-                                    <span>Verify Location on Map</span>
+                                        class="w-full flex items-center justify-center gap-3 p-5 bg-gradient-to-r from-blue-500 to-purple-500 text-white font-bold rounded-xl hover:from-blue-600 hover:to-purple-600 transition-all duration-300 shadow-xl hover:shadow-2xl transform hover:-translate-y-1 pulse">
+                                    <i class="fas fa-map-marker-alt text-xl"></i>
+                                    <span class="text-lg">📍 Verify Your Location on Map</span>
+                                    <i class="fas fa-arrow-right ml-auto"></i>
                                 </button>
-                                <p class="text-sm text-gray-600 mt-2 text-center">
-                                    Click to mark your location on the map for accurate delivery charge calculation
+                                <p class="text-sm text-gray-600 mt-3 text-center flex items-center justify-center">
+                                    <i class="fas fa-info-circle mr-2 text-blue-500"></i>
+                                    Click to Mark your Location for Accurate Delivery Charge Calculation.
                                 </p>
                             </div>
                         </form>
@@ -385,130 +493,208 @@
                 <!-- Right Column: Map and Charges -->
                 <div class="lg:w-1/2">
                     <!-- Map Container -->
-                    <div class="bg-white/95 backdrop-blur-sm rounded-2xl shadow-2xl p-6 mb-6 slide-in">
-                        <h2 class="text-2xl font-bold text-gray-800 mb-6 flex items-center">
-                            <i class="fas fa-map text-blue-600 mr-3"></i>Location Verification
+                    <div class="bg-white/95 backdrop-blur-sm rounded-2xl shadow-2xl p-8 mb-6 slide-in border border-white/20">
+                        <h2 class="text-3xl font-bold text-gray-800 mb-6 flex items-center">
+                            <i class="fas fa-map-marked-alt text-blue-500 mr-3 bg-blue-100 p-3 rounded-full"></i>
+                            Live Location Verification
                         </h2>
                         
-                        <div id="map" class="map-container"></div>
+                        <div id="map" class="map-container border-2 border-blue-200 shadow-inner"></div>
                         
-                        <div class="mt-4 flex flex-col sm:flex-row gap-3">
+                        <!-- Location Actions -->
+                        <div class="mt-6 grid grid-cols-1 sm:grid-cols-2 gap-4">
                             <button id="useCurrentLocationBtn" 
-                                    class="flex-1 flex items-center justify-center gap-2 p-3 bg-blue-100 text-blue-700 font-medium rounded-lg hover:bg-blue-200 transition">
-                                <i class="fas fa-location-crosshairs"></i>
-                                <span>Use My Current Location</span>
+                                    class="flex items-center justify-center gap-3 p-4 bg-gradient-to-r from-blue-100 to-blue-50 border-2 border-blue-200 text-blue-700 font-bold rounded-xl hover:bg-blue-100 hover:border-blue-300 transition-all duration-300 transform hover:scale-105 group">
+                                <i class="fas fa-location-crosshairs text-xl group-hover:animate-ping"></i>
+                                <span class="font-semibold">📍 Use My Current Location</span>
                             </button>
                             <button id="manualLocationBtn" 
-                                    class="flex-1 flex items-center justify-center gap-2 p-3 bg-gray-100 text-gray-700 font-medium rounded-lg hover:bg-gray-200 transition">
-                                <i class="fas fa-map-pin"></i>
-                                <span>Drop Pin Manually</span>
+                                    class="flex items-center justify-center gap-3 p-4 bg-gradient-to-r from-purple-100 to-purple-50 border-2 border-purple-200 text-purple-700 font-bold rounded-xl hover:bg-purple-100 hover:border-purple-300 transition-all duration-300 transform hover:scale-105 group">
+                                <i class="fas fa-map-pin text-xl group-hover:bounce"></i>
+                                <span class="font-semibold">📌 Drop Pin Manually</span>
                             </button>
                         </div>
                         
-                        <div id="locationStatus" class="mt-4 p-3 rounded-lg hidden">
-                            <div class="flex items-center">
-                                <i class="fas fa-check-circle text-green-500 mr-2"></i>
-                                <span id="locationText" class="text-green-700 font-medium">Location verified!</span>
+                        <!-- Location Status -->
+                        <div id="locationStatus" class="mt-6 p-4 rounded-xl hidden">
+                            <div class="flex items-center justify-between">
+                                <div class="flex items-center">
+                                    <div class="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center mr-4">
+                                        <i class="fas fa-check-circle text-2xl text-green-600"></i>
+                                    </div>
+                                    <div>
+                                        <span id="locationText" class="text-green-700 font-bold text-lg">Location Verified!</span>
+                                        <p class="text-sm text-gray-600 mt-1">Distance from Prime Square: <span id="previewDistance" class="font-bold">-- km</span></p>
+                                    </div>
+                                </div>
+                                <button id="copyLocationLinkBtn" class="flex items-center gap-2 px-4 py-2 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 transition">
+                                    <i class="fas fa-link"></i>
+                                    <span>Copy Location</span>
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <!-- Location Link (Hidden until generated) -->
+                        <div id="locationLinkContainer" class="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-xl hidden">
+                            <div class="flex items-center justify-between">
+                                <div class="flex items-center gap-3">
+                                    <i class="fas fa-share-alt text-blue-500 text-xl"></i>
+                                    <div>
+                                        <p class="text-sm font-medium text-blue-800">📍 Your Delivery Location Link:</p>
+                                        <a id="locationLink" href="#" target="_blank" class="text-blue-600 text-sm break-all hover:underline"></a>
+                                    </div>
+                                </div>
+                                <button id="copyLinkBtn" class="px-3 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition">
+                                    <i class="fas fa-copy"></i>
+                                </button>
                             </div>
                         </div>
                     </div>
                     
                     <!-- Delivery Charges -->
-                    <div id="deliveryChargesCard" class="bg-white/95 backdrop-blur-sm rounded-2xl shadow-2xl p-6 slide-in hidden">
-                        <h2 class="text-2xl font-bold text-gray-800 mb-6 flex items-center">
-                            <i class="fas fa-calculator text-blue-600 mr-3"></i>Delivery Charges
+                    <div id="deliveryChargesCard" class="bg-white/95 backdrop-blur-sm rounded-2xl shadow-2xl p-8 slide-in border border-white/20 hidden">
+                        <h2 class="text-3xl font-bold text-gray-800 mb-6 flex items-center">
+                            <i class="fas fa-truck-loading text-blue-500 mr-3 bg-blue-100 p-3 rounded-full"></i>
+                            Delivery Charges Summary
                         </h2>
                         
-                        <div class="space-y-4">
-                            <div class="flex justify-between items-center p-3 bg-blue-50/80 rounded-lg">
-                                <span class="font-medium text-gray-700">Distance from Prime Square</span>
-                                <span id="distanceValue" class="font-bold text-blue-700">-- km</span>
+                        <div class="space-y-5">
+                            <!-- Distance Display -->
+                            <div class="flex justify-between items-center p-5 bg-gradient-to-r from-blue-50 to-blue-100 border border-blue-200 rounded-xl">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-12 h-12 bg-blue-500 rounded-full flex items-center justify-center">
+                                        <i class="fas fa-route text-white"></i>
+                                    </div>
+                                    <div>
+                                        <p class="font-medium text-gray-700">Distance from Prime Square</p>
+                                        <p class="text-sm text-gray-500">Your Order Location</p>
+                                    </div>
+                                </div>
+                                <span id="distanceValue" class="text-3xl font-bold text-blue-700">-- km</span>
                             </div>
                             
-                            <div class="flex justify-between items-center p-3 bg-gray-50/80 rounded-lg">
-                                <span class="font-medium text-gray-700">Base Fare</span>
-                                <span id="baseFare" class="font-bold text-gray-800">₹0</span>
-                            </div>
-                            
-                            <div class="flex justify-between items-center p-3 bg-gray-50/80 rounded-lg">
-                                <span class="font-medium text-gray-700">GST (18%)</span>
-                                <span id="gstValue" class="font-bold text-gray-800">₹0</span>
-                            </div>
-                            
-                            <div class="border-t pt-4">
-                                <div class="flex justify-between items-center p-3 bg-gradient-to-r from-green-50/80 to-blue-50/80 border border-green-200 rounded-lg">
-                                    <span class="font-bold text-gray-800 text-lg">Total Delivery Charge</span>
-                                    <span id="totalCharge" class="font-bold text-green-700 text-2xl">₹0</span>
+                            <!-- Charges Breakdown -->
+                            <div class="space-y-3">
+                                <div class="flex justify-between items-center p-4 bg-gray-50 rounded-xl">
+                                    <span class="font-medium text-gray-700">Base Fare</span>
+                                    <span id="baseFare" class="font-bold text-gray-800 text-xl">₹0</span>
+                                </div>
+                                
+                                <div class="flex justify-between items-center p-4 bg-gray-50 rounded-xl">
+                                    <span class="font-medium text-gray-700">GST (18%)</span>
+                                    <span id="gstValue" class="font-bold text-gray-800 text-xl">₹0</span>
+                                </div>
+                                
+                                <div class="border-t-2 border-dashed border-gray-300 pt-5">
+                                    <div class="flex justify-between items-center p-5 bg-gradient-to-r from-green-50 to-emerald-50 border-2 border-green-200 rounded-xl">
+                                        <div class="flex items-center gap-3">
+                                            <div class="w-12 h-12 bg-green-500 rounded-full flex items-center justify-center">
+                                                <i class="fas fa-rupee-sign text-white"></i>
+                                            </div>
+                                            <div>
+                                                <p class="font-bold text-gray-800 text-lg">Total Delivery Charge</p>
+                                                <p class="text-sm text-green-600">Inclusive of all Taxes</p>
+                                            </div>
+                                        </div>
+                                        <span id="totalCharge" class="font-bold text-green-700 text-4xl">₹0</span>
+                                    </div>
                                 </div>
                             </div>
                             
-                            <div id="offerNote" class="p-3 bg-yellow-50/80 border border-yellow-200 rounded-lg hidden">
-                                <p class="text-sm text-yellow-800">
-                                    <i class="fas fa-info-circle mr-2"></i>
-                                    <span id="offerText"></span>
-                                </p>
+                            <!-- Free Delivery Offer -->
+                            <div id="freeDeliveryOffer" class="p-5 bg-gradient-to-r from-green-50 to-emerald-50 border-2 border-green-200 rounded-xl hidden">
+                                <div class="flex items-center gap-4">
+                                    <div class="w-14 h-14 bg-green-500 rounded-full flex items-center justify-center">
+                                        <i class="fas fa-gift text-2xl text-white"></i>
+                                    </div>
+                                    <div>
+                                        <h4 class="font-bold text-green-800 text-lg mb-1">🎉 FREE DELIVERY!</h4>
+                                        <p class="text-green-700">
+                                            Your order value exceeds ₹199, So Delivery is completely FREE!
+                                            <span class="font-bold">You save: <span id="savingsAmount">₹0</span></span>
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Regular Offer Note -->
+                            <div id="offerNote" class="p-4 bg-yellow-50 border-2 border-yellow-200 rounded-xl hidden">
+                                <div class="flex items-start gap-3">
+                                    <i class="fas fa-info-circle text-yellow-500 text-xl mt-1"></i>
+                                    <div>
+                                        <p class="text-sm text-yellow-800">
+                                            <span id="offerText"></span>
+                                        </p>
+                                    </div>
+                                </div>
                             </div>
                             
                             <!-- Security Warning -->
-                            <div class="p-3 bg-red-50/80 border border-red-200 rounded-lg">
-                                <div class="flex items-start">
-                                    <i class="fas fa-exclamation-triangle text-red-500 mt-1 mr-2"></i>
+                            <div class="p-4 bg-red-50 border-2 border-red-200 rounded-xl">
+                                <div class="flex items-start gap-3">
+                                    <i class="fas fa-shield-alt text-red-500 text-xl mt-1"></i>
                                     <div>
-                                        <p class="text-sm text-red-700 font-medium">
-                                            By proceeding, you confirm that the order amount entered matches your Razorpay transaction.
-                                            Mismatched amounts will result in order cancellation and security penalties.
+                                        <h4 class="font-bold text-red-700 mb-1">Security Verification Required</h4>
+                                        <p class="text-sm text-red-600">
+                                            By proceeding, you confirm that the order amount (₹<span id="verifyAmount">0</span>) matches your Razorpay transaction.
+                                            <span class="font-bold">Mismatched amounts = Order Cancellation + Security Penalty</span>
                                         </p>
                                     </div>
                                 </div>
                             </div>
                             
                             <!-- Action Buttons -->
-                            <div class="flex flex-col sm:flex-row gap-4 mt-6">
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-8">
                                 <button id="approveBtn" 
-                                        class="flex-1 flex items-center justify-center gap-2 p-4 bg-gradient-to-r from-green-600 to-emerald-600 text-white font-bold rounded-lg hover:from-green-700 hover:to-emerald-700 transition-all duration-300 shadow-lg hover:shadow-xl">
-                                    <i class="fas fa-check-circle"></i>
-                                    <span>Perfect! Pay & Deliver</span>
+                                        class="flex items-center justify-center gap-3 p-5 bg-gradient-to-r from-green-500 to-emerald-500 text-white font-bold rounded-xl hover:from-green-600 hover:to-emerald-600 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-1 group">
+                                    <i class="fas fa-check-circle text-xl group-hover:scale-110 transition-transform"></i>
+                                    <span class="text-lg">✅ Perfect! Pay & Deliver</span>
                                 </button>
                                 <button id="denyBtn" 
-                                        class="flex-1 flex items-center justify-center gap-2 p-4 bg-gradient-to-r from-red-600 to-pink-600 text-white font-bold rounded-lg hover:from-red-700 hover:to-pink-700 transition-all duration-300 shadow-lg hover:shadow-xl">
-                                    <i class="fas fa-times-circle"></i>
-                                    <span>Deny & Request Refund</span>
+                                        class="flex items-center justify-center gap-3 p-5 bg-gradient-to-r from-red-500 to-pink-500 text-white font-bold rounded-xl hover:from-red-600 hover:to-pink-600 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-1 group">
+                                    <i class="fas fa-times-circle text-xl group-hover:scale-110 transition-transform"></i>
+                                    <span class="text-lg">❌ Deny & Request Refund</span>
                                 </button>
                             </div>
                             
-                            <p class="text-xs text-gray-600 text-center mt-4">
-                                <i class="fas fa-shield-alt mr-1"></i>Your data is secure. Details will be shared with EasyGo for order confirmation.
+                            <p class="text-xs text-gray-600 text-center mt-6 flex items-center justify-center">
+                                <i class="fas fa-shield-alt mr-2 text-blue-500"></i>
+                                Your data is secure. Details will be shared with EasyGo for order confirmation.
                             </p>
                         </div>
                     </div>
                     
                     <!-- Result Message -->
                     <div id="resultMessage" class="hidden mt-6">
-                        <div class="bg-white/95 backdrop-blur-sm rounded-2xl shadow-2xl p-6 text-center">
+                        <div class="bg-white/95 backdrop-blur-sm rounded-2xl shadow-2xl p-8 text-center border border-white/20">
                             <div id="successMessage" class="hidden">
-                                <div class="text-green-500 text-6xl mb-4">
+                                <div class="text-green-500 text-8xl mb-6 animate-bounce">
                                     <i class="fas fa-check-circle"></i>
                                 </div>
-                                <h3 class="text-2xl font-bold text-gray-800 mb-2">Order Confirmed!</h3>
-                                <p class="text-gray-600 mb-2">Thank you for your order. Details have been shared with EasyGo.</p>
-                                <p class="text-green-600 font-medium mb-4">
-                                    <i class="fas fa-truck mr-2"></i>Your item will be delivered shortly
+                                <h3 class="text-3xl font-bold text-gray-800 mb-4">🎊 Order Confirmation Will be Updated withn 2 mins !</h3>
+                                <p class="text-gray-600 mb-3 text-lg">Thank you for your order. Details have been shared with EasyGo.</p>
+                                <p class="text-green-600 font-medium mb-6 text-lg">
+                                    <i class="fas fa-truck-fast mr-2"></i>Your item is on the Way!
                                 </p>
-                                <button id="newOrderBtn" class="px-6 py-3 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition shadow-md hover:shadow-lg">
-                                    <i class="fas fa-plus mr-2"></i>Place New Order
+                                <p class="text-sm text-gray-500 mb-6 p-4 bg-blue-50 rounded-lg">
+                                    <i class="fas fa-map-marker-alt mr-2"></i>
+                                    Location Link has been shared for accurate Delivery !!
+                                </p>
+                                <button id="newOrderBtn" class="px-8 py-4 bg-gradient-to-r from-blue-500 to-purple-500 text-white font-bold rounded-xl hover:from-blue-600 hover:to-purple-600 transition shadow-xl hover:shadow-2xl transform hover:-translate-y-1">
+                                    <i class="fas fa-plus mr-2"></i>Place Another Order
                                 </button>
                             </div>
                             
                             <div id="deniedMessage" class="hidden">
-                                <div class="text-red-500 text-6xl mb-4">
+                                <div class="text-red-500 text-8xl mb-6 animate-pulse">
                                     <i class="fas fa-sad-cry"></i>
                                 </div>
-                                <h3 class="text-2xl font-bold text-gray-800 mb-2">We're Sorry to See you Go!</h3>
-                                <p class="text-gray-600 mb-2">Your refund request has been noted. Details have been shared with EasyGo.</p>
-                                <p class="text-red-600 font-medium mb-4">
+                                <h3 class="text-3xl font-bold text-gray-800 mb-4">We're Sorry to See you Go! 😢</h3>
+                                <p class="text-gray-600 mb-3 text-lg">Your Refund Request has been Noted. Details have been shared with EasyGo. It will be visible in your account within 5 Working Days.</p>
+                                <p class="text-red-600 font-medium mb-6 text-lg">
                                     <i class="fas fa-exclamation-triangle mr-2"></i>Security verification will be performed before refund
                                 </p>
-                                <button id="tryAgainBtn" class="px-6 py-3 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition shadow-md hover:shadow-lg">
+                                <button id="tryAgainBtn" class="px-8 py-4 bg-gradient-to-r from-blue-500 to-purple-500 text-white font-bold rounded-xl hover:from-blue-600 hover:to-purple-600 transition shadow-xl hover:shadow-2xl transform hover:-translate-y-1">
                                     <i class="fas fa-redo mr-2"></i>Try Again
                                 </button>
                             </div>
@@ -518,27 +704,39 @@
             </div>
             
             <!-- Footer -->
-            <footer class="mt-8 text-center text-white/80 text-sm">
-                <div class="flex flex-col md:flex-row justify-between items-center gap-4">
-                    <div class="flex items-center gap-2">
-                        <i class="fas fa-map-marker-alt"></i>
-                        <p>EasyGo | &copy; clean-scripts </p>
+            <footer class="mt-12 text-center text-white/90">
+                <div class="flex flex-col md:flex-row justify-between items-center gap-6">
+                    <div class="flex items-center gap-6">
+                        <div class="flex items-center gap-2">
+                            <i class="fas fa-shield-alt"></i>
+                            <p>Secure Payment Verification</p>
+                        </div>
+                     <div class="h-6 w-px bg-white/30"></div>
+                        <div class="flex items-center gap-2">
+                            <i class="fas fa-bolt"></i>
+                            <p>Instant Delivery Quotes</p>
+                        </div>
                     </div>
-                    <div class="flex items-center gap-2">
-                        <i class="fas fa-shield-alt"></i>
-                        <p>Secure Payment Verification | Razorpay Integration</p>
-                    </div>
+                </div>
+                
+                <div class="mt-6 pt-6 border-t border-white/20">
+                    <p class="text-sm text-white/70">
+                        &copy; 2024 EasyGo | Clean-Scripts | All rights reserved
+                    </p>
                 </div>
             </footer>
         </div>
     </div>
     
     <!-- Loading Overlay -->
-    <div id="loadingOverlay" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
-        <div class="bg-white p-8 rounded-2xl shadow-2xl text-center max-w-sm">
-            <div class="loader mx-auto mb-4"></div>
-            <p class="text-lg font-medium text-gray-800">Verifying Order Details...</p>
-            <p class="text-gray-600 mt-2">Please wait while we validate your payment</p>
+    <div id="loadingOverlay" class="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50 hidden">
+        <div class="bg-white p-10 rounded-2xl shadow-2xl text-center max-w-sm transform scale-110">
+            <div class="loader mx-auto mb-6"></div>
+            <p class="text-xl font-bold text-gray-800 mb-2">Processing Your Request</p>
+            <p class="text-gray-600">Please wait while we verify your details...</p>
+            <div class="mt-4 w-full bg-gray-200 rounded-full h-2">
+                <div id="loadingProgress" class="bg-gradient-to-r from-blue-500 to-purple-500 h-2 rounded-full transition-all duration-300" style="width: 0%"></div>
+            </div>
         </div>
     </div>
     
@@ -548,6 +746,7 @@
         let userMarker;
         let userLocation = null;
         let verifiedOrder = null;
+        let googleMapsLink = "";
         
         // Updated Correct Locations based on provided coordinates
         const primeSquareLocation = [22.7767737, 75.9605483]; // Prime Square, Omaxe City 1, Indore
@@ -586,24 +785,59 @@
             document.getElementById('orderVerificationModal').style.display = 'none';
         }
         
+        function updateProgressBar(step) {
+            const progressBar = document.getElementById('progressBar');
+            if (step === 1) {
+                progressBar.style.width = '33%';
+            } else if (step === 2) {
+                progressBar.style.width = '66%';
+            } else if (step === 3) {
+                progressBar.style.width = '100%';
+            }
+        }
+        
+        function showLoading(show) {
+            const loadingOverlay = document.getElementById('loadingOverlay');
+            if (show) {
+                loadingOverlay.classList.remove('hidden');
+                // Animate progress bar
+                let progress = 0;
+                const interval = setInterval(() => {
+                    progress += 5;
+                    if (progress > 90) {
+                        clearInterval(interval);
+                    }
+                    document.getElementById('loadingProgress').style.width = progress + '%';
+                }, 200);
+            } else {
+                loadingOverlay.classList.add('hidden');
+                document.getElementById('loadingProgress').style.width = '0%';
+            }
+        }
+        
         function verifyOrder() {
             const orderAmount = document.getElementById('orderAmount').value;
             const orderId = document.getElementById('orderId').value;
             
+            // Validation
             if (!orderAmount || orderAmount <= 0) {
-                alert('Please enter a valid order amount');
+                document.getElementById('orderAmount').classList.add('shake');
+                setTimeout(() => document.getElementById('orderAmount').classList.remove('shake'), 500);
+                alert('Please enter a valid order amount (greater than ₹0)');
                 return;
             }
             
             if (!orderId.trim()) {
+                document.getElementById('orderId').classList.add('shake');
+                setTimeout(() => document.getElementById('orderId').classList.remove('shake'), 500);
                 alert('Please enter your Razorpay Order ID');
                 return;
             }
             
             // Show loading
-            document.getElementById('loadingOverlay').classList.remove('hidden');
+            showLoading(true);
             
-            // Simulate verification process (in real implementation, this would call your backend)
+            // Simulate verification process
             setTimeout(() => {
                 // Store verified order details
                 verifiedOrder = {
@@ -613,19 +847,49 @@
                 };
                 
                 // Update UI with verified order info
-                document.getElementById('displayOrderAmount').textContent = `₹${verifiedOrder.amount}`;
-                document.getElementById('displayOrderId').textContent = verifiedOrder.orderId;
-                document.getElementById('verifiedOrderInfo').classList.remove('hidden');
+                document.getElementById('orderAmountBadge').textContent = `₹${verifiedOrder.amount}`;
+                document.getElementById('verifiedBadge').classList.remove('hidden');
+                document.getElementById('verifyAmount').textContent = verifiedOrder.amount;
                 
                 // Hide modal and loading
                 hideOrderVerificationModal();
-                document.getElementById('loadingOverlay').classList.add('hidden');
+                showLoading(false);
+                
+                // Update progress
+                updateProgressBar(2);
                 
                 // Enable address form
                 document.getElementById('addressForm').querySelectorAll('input, select, textarea').forEach(el => {
                     el.disabled = false;
                 });
-            }, 1500);
+                
+                // Add confetti effect
+                createConfetti();
+            }, 2000);
+        }
+        
+        function createConfetti() {
+            const colors = ['#3b82f6', '#8b5cf6', '#10b981', '#f59e0b', '#ef4444'];
+            for (let i = 0; i < 50; i++) {
+                const confetti = document.createElement('div');
+                confetti.className = 'confetti';
+                confetti.style.left = Math.random() * 100 + 'vw';
+                confetti.style.top = '-10px';
+                confetti.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+                confetti.style.transform = `rotate(${Math.random() * 360}deg)`;
+                document.body.appendChild(confetti);
+                
+                // Animate
+                const animation = confetti.animate([
+                    { top: '-10px', opacity: 1, transform: `rotate(${Math.random() * 360}deg)` },
+                    { top: '100vh', opacity: 0, transform: `rotate(${Math.random() * 360}deg)` }
+                ], {
+                    duration: 1000 + Math.random() * 2000,
+                    easing: 'cubic-bezier(0.215, 0.61, 0.355, 1)'
+                });
+                
+                animation.onfinish = () => confetti.remove();
+            }
         }
         
         // Initialize map
@@ -639,56 +903,56 @@
                 // Custom icons for markers
                 const primeIcon = L.divIcon({
                     className: 'custom-div-icon',
-                    html: '<div style="background-color: #3b82f6; width: 30px; height: 30px; border-radius: 50%; border: 3px solid white; box-shadow: 0 2px 5px rgba(0,0,0,0.3);"></div>',
-                    iconSize: [30, 30],
-                    iconAnchor: [15, 15]
+                    html: '<div style="background-color: #3b82f6; width: 35px; height: 35px; border-radius: 50%; border: 3px solid white; box-shadow: 0 3px 10px rgba(0,0,0,0.4); display: flex; align-items: center; justify-content: center;"><i class="fas fa-star" style="color: white; font-size: 14px;"></i></div>',
+                    iconSize: [35, 35],
+                    iconAnchor: [17, 17]
                 });
                 
                 const taskusIcon = L.divIcon({
                     className: 'custom-div-icon',
-                    html: '<div style="background-color: #ef4444; width: 30px; height: 30px; border-radius: 50%; border: 3px solid white; box-shadow: 0 2px 5px rgba(0,0,0,0.3);"></div>',
-                    iconSize: [30, 30],
-                    iconAnchor: [15, 15]
+                    html: '<div style="background-color: #ef4444; width: 35px; height: 35px; border-radius: 50%; border: 3px solid white; box-shadow: 0 3px 10px rgba(0,0,0,0.4); display: flex; align-items: center; justify-content: center;"><i class="fas fa-building" style="color: white; font-size: 14px;"></i></div>',
+                    iconSize: [35, 35],
+                    iconAnchor: [17, 17]
                 });
                 
                 const sapphireIcon = L.divIcon({
                     className: 'custom-div-icon',
-                    html: '<div style="background-color: #10b981; width: 30px; height: 30px; border-radius: 50%; border: 3px solid white; box-shadow: 0 2px 5px rgba(0,0,0,0.3);"></div>',
-                    iconSize: [30, 30],
-                    iconAnchor: [15, 15]
+                    html: '<div style="background-color: #10b981; width: 35px; height: 35px; border-radius: 50%; border: 3px solid white; box-shadow: 0 3px 10px rgba(0,0,0,0.4); display: flex; align-items: center; justify-content: center;"><i class="fas fa-gem" style="color: white; font-size: 14px;"></i></div>',
+                    iconSize: [35, 35],
+                    iconAnchor: [17, 17]
                 });
                 
                 const ligIcon = L.divIcon({
                     className: 'custom-div-icon',
-                    html: '<div style="background-color: #f59e0b; width: 30px; height: 30px; border-radius: 50%; border: 3px solid white; box-shadow: 0 2px 5px rgba(0,0,0,0.3);"></div>',
-                    iconSize: [30, 30],
-                    iconAnchor: [15, 15]
+                    html: '<div style="background-color: #f59e0b; width: 35px; height: 35px; border-radius: 50%; border: 3px solid white; box-shadow: 0 3px 10px rgba(0,0,0,0.4); display: flex; align-items: center; justify-content: center;"><i class="fas fa-square" style="color: white; font-size: 14px;"></i></div>',
+                    iconSize: [35, 35],
+                    iconAnchor: [17, 17]
                 });
                 
                 // Add reference markers with updated locations
                 L.marker(primeSquareLocation, {icon: primeIcon}).addTo(map)
-                    .bindPopup('<b>Prime Square, Omaxe City 1</b><br>Delivery reference point<br>Free delivery within 4km')
+                    .bindPopup('<b>Prime Square, Omaxe City 1</b><br>📍 Delivery reference point<br>🎁 FREE Delivery if order > ₹199')
                     .openPopup();
                 
                 L.marker(taskusLocation, {icon: taskusIcon}).addTo(map)
-                    .bindPopup('<b>Taskus, Indore</b><br>Fixed charge: ₹20 + GST')
+                    .bindPopup('<b>Taskus, Indore</b><br>💰 Fixed charge: ₹20 + GST<br>📏 Within 2km radius')
                     .openPopup();
                 
                 L.marker(brilliantSapphireLocation, {icon: sapphireIcon}).addTo(map)
-                    .bindPopup('<b>Brilliant Sapphire, Indore</b><br>Fixed charge: ₹15 + GST')
+                    .bindPopup('<b>Brilliant Sapphire, Indore</b><br>💰 Fixed charge: ₹15 + GST<br>📏 Within 2km radius')
                     .openPopup();
                     
                 L.marker(ligSquareLocation, {icon: ligIcon}).addTo(map)
-                    .bindPopup('<b>LIG Square, Indore</b><br>Charge: ₹3 per 500m + GST')
+                    .bindPopup('<b>LIG Square, Indore</b><br>📐 Charge: ₹3 per 500m + GST<br>🛣️ Prime Square to LIG Square route')
                     .openPopup();
                     
                 // Add a circle for 4km radius from Prime Square
                 L.circle(primeSquareLocation, {
                     color: '#3b82f6',
                     fillColor: '#3b82f6',
-                    fillOpacity: 0.1,
+                    fillOpacity: 0.15,
                     radius: 4000 // 4km in meters
-                }).addTo(map).bindPopup('4km free delivery zone from Prime Square');
+                }).addTo(map).bindPopup('4km FREE Delivery zone from Prime Square');
             } else {
                 map.setView([lat, lng], 14);
             }
@@ -707,35 +971,54 @@
             return R * c; // Distance in km
         }
         
-        // Calculate delivery charges based on distance
+        // Calculate Delivery charges based on distance AND order amount
         function calculateDeliveryCharges(distance) {
             let baseCharge = 0;
             let offerText = "";
             let showOffer = false;
+            let freeDelivery = false;
             
-            // Parameter 1: Orders within 4km from Prime Square
+            // Check if order amount qualifies for free Delivery (order > ₹199)
+            const orderAmount = verifiedOrder ? parseFloat(verifiedOrder.amount) : 0;
+            const freeDeliveryEligible = orderAmount > 199;
+            
+            // Calculate distances to other reference points
+            const distanceToTaskus = calculateDistance(userLocation.lat, userLocation.lng, taskusLocation[0], taskusLocation[1]);
+            const distanceToSapphire = calculateDistance(userLocation.lat, userLocation.lng, brilliantSapphireLocation[0], brilliantSapphireLocation[1]);
+            
+            // ✅ ANSWER TO YOUR QUESTION: If within 4km AND order > ₹199 = FREE, else charged
             if (distance <= 4) {
-                baseCharge = 0;
-                offerText = "🎉 Free delivery! You're within 4km of Prime Square.";
-                showOffer = true;
+                if (freeDeliveryEligible) {
+                    baseCharge = 0;
+                    offerText = "🎉 FREE DELIVERY! Your order value (₹" + orderAmount + ") exceeds ₹199";
+                    showOffer = true;
+                    freeDelivery = true;
+                } else {
+                    // Within 4km but order ≤ ₹199: ₹2 per km as per Parameter 1
+                    baseCharge = Math.ceil(distance * 2);
+                    offerText = "Within 4km of Prime Square: ₹2 per km applies (order ≤ ₹199)";
+                    showOffer = true;
+                }
             } 
-            // Parameter 2: Taskus and nearby 2km
-            else if (calculateDistance(userLocation.lat, userLocation.lng, taskusLocation[0], taskusLocation[1]) <= 2) {
+            // Parameter 2: Taskus area (within 2km) - ₹20
+            else if (distanceToTaskus <= 2) {
                 baseCharge = 20;
                 offerText = "Delivery to Taskus area: Fixed ₹20 charge";
             }
-            // Parameter 3: Brilliant Sapphire and nearby 2km
-            else if (calculateDistance(userLocation.lat, userLocation.lng, brilliantSapphireLocation[0], brilliantSapphireLocation[1]) <= 2) {
+            // Parameter 3: Brilliant Sapphire area (within 2km) - ₹15
+            else if (distanceToSapphire <= 2) {
                 baseCharge = 15;
                 offerText = "Delivery to Brilliant Sapphire area: Fixed ₹15 charge";
             }
-            // Parameter 4: From Prime Square to LIG Square and nearby 1km
-            else if (distance <= calculateDistance(primeSquareLocation[0], primeSquareLocation[1], ligSquareLocation[0], ligSquareLocation[1]) + 1) {
+            // Parameter 4: Prime Square to LIG Square route - ₹3 per 500m
+            // Only if beyond 4km from Prime Square
+            else if (distance > 4 && distance <= calculateDistance(primeSquareLocation[0], primeSquareLocation[1], ligSquareLocation[0], ligSquareLocation[1])) {
                 // ₹3 per 500m
-                baseCharge = Math.ceil(distance * 2) * 3; // Convert km to 500m units
-                offerText = "₹3 per 500m charge applies for this route";
+                const units = Math.ceil(distance * 2); // Convert km to 500m units
+                baseCharge = units * 3;
+                offerText = "₹3 per 500m charge applies for Prime Square to LIG Square route";
             }
-            // Default: Beyond 4km from Prime Square but not in other zones
+            // Default: Beyond 4km but not in specific zones
             else {
                 baseCharge = 199; // Exceed cost
                 offerText = "Beyond 4km from Prime Square: ₹199 charge applies";
@@ -751,11 +1034,18 @@
                 gst: gst.toFixed(2),
                 totalCharge: totalCharge.toFixed(2),
                 offerText: offerText,
-                showOffer: showOffer
+                showOffer: showOffer,
+                freeDelivery: freeDelivery,
+                savings: freeDelivery ? totalCharge : 0
             };
         }
         
-        // Update delivery charges display
+        // Generate Google Maps link from coordinates
+        function generateGoogleMapsLink(lat, lng) {
+            return `https://www.google.com/maps?q=${lat},${lng}&z=17`;
+        }
+        
+        // Update Delivery charges display
         function updateDeliveryCharges() {
             if (!userLocation) return;
             
@@ -770,23 +1060,40 @@
             
             // Update UI
             document.getElementById('distanceValue').textContent = `${charges.distance} km`;
+            document.getElementById('previewDistance').textContent = `${charges.distance} km`;
             document.getElementById('baseFare').textContent = `₹${charges.baseCharge}`;
             document.getElementById('gstValue').textContent = `₹${charges.gst}`;
             document.getElementById('totalCharge').textContent = `₹${charges.totalCharge}`;
+            document.getElementById('savingsAmount').textContent = `₹${charges.savings}`;
             
-            // Show/hide offer note
+            // Show/hide free Delivery offer
+            const freeDeliveryOffer = document.getElementById('freeDeliveryOffer');
             const offerNote = document.getElementById('offerNote');
             const offerText = document.getElementById('offerText');
             
-            if (charges.showOffer) {
+            if (charges.freeDelivery) {
+                freeDeliveryOffer.classList.remove('hidden');
+                offerNote.classList.add('hidden');
+            } else if (charges.showOffer) {
+                freeDeliveryOffer.classList.add('hidden');
                 offerText.textContent = charges.offerText;
                 offerNote.classList.remove('hidden');
             } else {
+                freeDeliveryOffer.classList.add('hidden');
                 offerNote.classList.add('hidden');
             }
             
-            // Show delivery charges card
+            // Generate location link
+            googleMapsLink = generateGoogleMapsLink(userLocation.lat, userLocation.lng);
+            document.getElementById('locationLink').textContent = googleMapsLink;
+            document.getElementById('locationLink').href = googleMapsLink;
+            document.getElementById('locationLinkContainer').classList.remove('hidden');
+            
+            // Show Delivery charges card
             document.getElementById('deliveryChargesCard').classList.remove('hidden');
+            
+            // Update progress
+            updateProgressBar(3);
         }
         
         // Set user location on map
@@ -801,9 +1108,9 @@
             // Custom user marker
             const userIcon = L.divIcon({
                 className: 'custom-div-icon',
-                html: '<div class="pulse" style="background-color: #8b5cf6; width: 36px; height: 36px; border-radius: 50%; border: 4px solid white; box-shadow: 0 3px 8px rgba(0,0,0,0.4); display: flex; align-items: center; justify-content: center;"><i class="fas fa-user" style="color: white; font-size: 14px;"></i></div>',
-                iconSize: [36, 36],
-                iconAnchor: [18, 18]
+                html: '<div style="background: linear-gradient(135deg, #8b5cf6, #3b82f6); width: 45px; height: 45px; border-radius: 50%; border: 4px solid white; box-shadow: 0 5px 15px rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center;"><i class="fas fa-user" style="color: white; font-size: 18px;"></i></div>',
+                iconSize: [45, 45],
+                iconAnchor: [22, 22]
             });
             
             // Add new marker
@@ -821,35 +1128,39 @@
                 
                 // Update location status
                 const locationText = document.getElementById('locationText');
-                locationText.textContent = `Location updated: ${position.lat.toFixed(4)}, ${position.lng.toFixed(4)}`;
+                locationText.textContent = `📍 Location Updated!`;
             });
             
             // Center map on user location
-            map.setView([lat, lng], 14);
+            map.setView([lat, lng], 16);
             
             // Show location status
             const locationStatus = document.getElementById('locationStatus');
             const locationText = document.getElementById('locationText');
-            locationText.textContent = `Location set: ${lat.toFixed(4)}, ${lng.toFixed(4)}`;
+            locationText.textContent = `📍 Location Verified!`;
             locationStatus.classList.remove('hidden');
-            locationStatus.classList.add('bg-green-50', 'border', 'border-green-200');
             
-            // Update delivery charges
+            // Update Delivery charges
             updateDeliveryCharges();
             
             // Hide loading
-            document.getElementById('loadingOverlay').classList.add('hidden');
+            showLoading(false);
         }
         
         // Get current location
         function getCurrentLocation() {
             // Check if order is verified
             if (!verifiedOrder) {
-                alert('Please verify your order first before checking location');
+                alert('⚠️ Please verify your order first before checking location');
                 return;
             }
             
-            document.getElementById('loadingOverlay').classList.remove('hidden');
+            // Check if form is filled
+            if (!validateForm()) {
+                return;
+            }
+            
+            showLoading(true);
             
             if (navigator.geolocation) {
                 navigator.geolocation.getCurrentPosition(
@@ -860,19 +1171,66 @@
                     },
                     (error) => {
                         console.error("Error getting location:", error);
-                        alert("Unable to get your location. Please allow location access or use manual pin drop.");
-                        document.getElementById('loadingOverlay').classList.add('hidden');
+                        showLoading(false);
+                        alert("📍 Unable to get your location. Please allow location access or use manual pin drop.");
                     },
                     {
                         enableHighAccuracy: true,
-                        timeout: 10000,
+                        timeout: 15000,
                         maximumAge: 0
                     }
                 );
             } else {
-                alert("Geolocation is not supported by this browser.");
-                document.getElementById('loadingOverlay').classList.add('hidden');
+                showLoading(false);
+                alert("📍 Geolocation is not supported by this browser.");
             }
+        }
+        
+        // Validate form fields
+        function validateForm() {
+            const requiredFields = ['name', 'phone', 'addressType', 'houseNumber', 'locality', 'street', 'pincode'];
+            let isValid = true;
+            
+            requiredFields.forEach(fieldId => {
+                const field = document.getElementById(fieldId);
+                if (!field.value.trim()) {
+                    field.classList.add('shake', 'border-red-500');
+                    setTimeout(() => field.classList.remove('shake'), 500);
+                    isValid = false;
+                    
+                    // Scroll to first error
+                    if (isValid === false) {
+                        field.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    }
+                } else {
+                    field.classList.remove('border-red-500');
+                }
+            });
+            
+            if (!isValid) {
+                alert('❌ Please fill in all required fields (marked with *) before verifying location.');
+                return false;
+            }
+            
+            // Validate phone number
+            const phone = document.getElementById('phone').value;
+            if (!/^\d{10}$/.test(phone)) {
+                document.getElementById('phone').classList.add('shake', 'border-red-500');
+                setTimeout(() => document.getElementById('phone').classList.remove('shake'), 500);
+                alert('❌ Please enter a valid 10-digit phone number.');
+                return false;
+            }
+            
+            // Validate pincode
+            const pincode = document.getElementById('pincode').value;
+            if (!/^\d{6}$/.test(pincode)) {
+                document.getElementById('pincode').classList.add('shake', 'border-red-500');
+                setTimeout(() => document.getElementById('pincode').classList.remove('shake'), 500);
+                alert('❌ Please enter a valid 6-digit pincode.');
+                return false;
+            }
+            
+            return true;
         }
         
         // Send data to backend (WhatsApp/Server)
@@ -891,6 +1249,7 @@
             
             const distance = document.getElementById('distanceValue').textContent;
             const totalCharge = document.getElementById('totalCharge').textContent;
+            const baseFare = document.getElementById('baseFare').textContent;
             
             const orderDetails = {
                 action: action,
@@ -901,28 +1260,30 @@
                 address: `${houseNumber}, ${floorNumber}, ${street}, ${locality}, ${city}, ${state} - ${pincode}`,
                 addressType: addressType,
                 distance: distance,
+                baseFare: baseFare,
                 deliveryCharge: totalCharge,
                 specialRequest: specialRequest,
+                locationLink: googleMapsLink,
                 userLocation: userLocation,
                 timestamp: new Date().toLocaleString()
             };
             
-            // In production, send to your backend/WhatsApp
-            // For demo, we'll just show a confirmation
-            
-            // WhatsApp message format
-            const message = `EasyGo Order ${action}%0A%0A` +
+            // WhatsApp message format with location link
+            const message = `📦 EasyGo Order ${action}%0A%0A` +
                 `*Order ID:* ${orderDetails.orderId}%0A` +
                 `*Order Amount:* ₹${orderDetails.orderAmount}%0A` +
-                `*Name:* ${orderDetails.customerName}%0A` +
+                `*Customer:* ${orderDetails.customerName}%0A` +
                 `*Phone:* ${orderDetails.phone}%0A` +
                 `*Address:* ${orderDetails.address}%0A` +
                 `*Address Type:* ${orderDetails.addressType}%0A` +
                 `*Distance:* ${orderDetails.distance}%0A` +
+                `*Base Fare:* ${orderDetails.baseFare}%0A` +
                 `*Delivery Charge:* ${orderDetails.deliveryCharge}%0A` +
-                `*Special Request:* ${orderDetails.specialRequest || 'None'}%0A` +
+                `*Special Request:* ${orderDetails.specialRequest || 'None'}%0A%0A` +
+                `📍 *Delivery Location Link:*%0A${orderDetails.locationLink}%0A%0A` +
+                `*Coordinates:* ${orderDetails.userLocation.lat.toFixed(6)}, ${orderDetails.userLocation.lng.toFixed(6)}%0A` +
                 `*Action:* ${action}%0A` +
-                `*Timestamp:* ${orderDetails.timestamp}`;
+                `*Time:* ${orderDetails.timestamp}`;
             
             // Open WhatsApp with pre-filled message
             window.open(`https://wa.me/917651837322?text=${message}`, '_blank');
@@ -935,11 +1296,15 @@
             document.getElementById('deniedMessage').classList.add('hidden');
             document.getElementById('deliveryChargesCard').classList.add('hidden');
             document.getElementById('locationStatus').classList.add('hidden');
-            document.getElementById('verifiedOrderInfo').classList.add('hidden');
+            document.getElementById('locationLinkContainer').classList.add('hidden');
+            document.getElementById('verifiedBadge').classList.add('hidden');
+            document.getElementById('freeDeliveryOffer').classList.add('hidden');
+            document.getElementById('offerNote').classList.add('hidden');
             
             // Clear form
             document.getElementById('name').value = '';
             document.getElementById('phone').value = '';
+            document.getElementById('addressType').value = '';
             document.getElementById('houseNumber').value = '';
             document.getElementById('floorNumber').value = '';
             document.getElementById('locality').value = '';
@@ -964,6 +1329,9 @@
                 userLocation = null;
             }
             
+            // Reset progress
+            updateProgressBar(1);
+            
             // Show verification modal again
             verifiedOrder = null;
             setTimeout(() => {
@@ -976,7 +1344,7 @@
             // Show order verification modal on page load
             setTimeout(() => {
                 showOrderVerificationModal();
-            }, 500);
+            }, 800);
             
             // Initialize map
             initMap();
@@ -988,9 +1356,31 @@
             
             // Order verification modal buttons
             document.getElementById('verifyOrderBtn').addEventListener('click', verifyOrder);
-            document.getElementById('cancelVerificationBtn').addEventListener('click', hideOrderVerificationModal);
-            document.getElementById('editOrderBtn').addEventListener('click', function() {
-                showOrderVerificationModal();
+            document.getElementById('cancelVerificationBtn').addEventListener('click', function() {
+                if (confirm('Are you sure you want to cancel? You need to verify your order to proceed.')) {
+                    hideOrderVerificationModal();
+                }
+            });
+            
+            // Copy location link
+            document.getElementById('copyLocationLinkBtn').addEventListener('click', function() {
+                document.getElementById('locationLinkContainer').classList.remove('hidden');
+                document.getElementById('copyLinkBtn').click();
+            });
+            
+            document.getElementById('copyLinkBtn').addEventListener('click', function() {
+                navigator.clipboard.writeText(googleMapsLink).then(() => {
+                    const btn = document.getElementById('copyLinkBtn');
+                    const originalHTML = btn.innerHTML;
+                    btn.innerHTML = '<i class="fas fa-check"></i>';
+                    btn.classList.remove('bg-blue-500');
+                    btn.classList.add('bg-green-500');
+                    setTimeout(() => {
+                        btn.innerHTML = originalHTML;
+                        btn.classList.remove('bg-green-500');
+                        btn.classList.add('bg-blue-500');
+                    }, 2000);
+                });
             });
             
             // Pincode lookup
@@ -1008,31 +1398,6 @@
             
             // Get location button
             document.getElementById('getLocationBtn').addEventListener('click', function() {
-                // Check if order is verified
-                if (!verifiedOrder) {
-                    alert('Please verify your order first before checking location');
-                    return;
-                }
-                
-                // Validate form first
-                const requiredFields = ['name', 'phone', 'houseNumber', 'locality', 'street', 'pincode'];
-                let isValid = true;
-                
-                requiredFields.forEach(fieldId => {
-                    const field = document.getElementById(fieldId);
-                    if (!field.value.trim()) {
-                        field.classList.add('border-red-500');
-                        isValid = false;
-                    } else {
-                        field.classList.remove('border-red-500');
-                    }
-                });
-                
-                if (!isValid) {
-                    alert('Please fill in all required fields before verifying location.');
-                    return;
-                }
-                
                 getCurrentLocation();
             });
             
@@ -1043,11 +1408,16 @@
             document.getElementById('manualLocationBtn').addEventListener('click', function() {
                 // Check if order is verified
                 if (!verifiedOrder) {
-                    alert('Please verify your order first before setting location');
+                    alert('⚠️ Please verify your order first before setting location');
                     return;
                 }
                 
-                alert('Click on the map to drop a pin at your location. You can also drag the pin to adjust.');
+                // Check if form is filled
+                if (!validateForm()) {
+                    return;
+                }
+                
+                alert('🗺️ Click on the map to drop a pin at your location. You can drag the pin to adjust.');
                 
                 // Set up map click listener
                 map.once('click', function(e) {
@@ -1058,29 +1428,35 @@
             // Approve button
             document.getElementById('approveBtn').addEventListener('click', function() {
                 if (!verifiedOrder) {
-                    alert('Please verify your order first');
+                    alert('⚠️ Please verify your order first');
+                    return;
+                }
+                
+                if (!userLocation) {
+                    alert('📍 Please set your location first');
                     return;
                 }
                 
                 document.getElementById('resultMessage').classList.remove('hidden');
                 document.getElementById('successMessage').classList.remove('hidden');
-                sendOrderDetails('APPROVED - Order Confirmed');
+                sendOrderDetails('✅ APPROVED - Order Confirmed');
             });
             
             // Deny button
             document.getElementById('denyBtn').addEventListener('click', function() {
                 if (!verifiedOrder) {
-                    alert('Please verify your order first');
+                    alert('⚠️ Please verify your order first');
                     return;
                 }
                 
                 document.getElementById('resultMessage').classList.remove('hidden');
                 document.getElementById('deniedMessage').classList.remove('hidden');
-                sendOrderDetails('DENIED - Refund Requested');
+                sendOrderDetails('❌ DENIED - Refund Requested');
             });
             
             // New order button
-            document.getElementById('newOrderBtn').addEventListener('click', resetForm);
+        document.getElementById('newOrderBtn').addEventListener('click', () => {
+            window.location.href = "https://clean-scripts.github.io/Easygo-Menu/";});
             
             // Try again button
             document.getElementById('tryAgainBtn').addEventListener('click', resetForm);
@@ -1102,6 +1478,13 @@
                     }
                 });
             });
+            
+            // Add demo data for testing (optional)
+            setTimeout(() => {
+                // Demo data
+                document.getElementById('orderAmount').value = "250";
+                document.getElementById('orderId').value = "ORD_" + Math.floor(Math.random() * 1000000);
+            }, 1000);
         });
     </script>
 </body>
