@@ -3,7 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>EasyGo-Address | Address Verification & Delivery Charges</title>
+    <title>EasyGo | Delivery Charges </title>
+    <!-- Favicon -->
+    <link rel="icon" type="image/x-icon" href="https://cdn-icons-png.flaticon.com/512/684/684908.png">
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
@@ -42,292 +44,501 @@
             from { transform: translateY(20px); opacity: 0; }
             to { transform: translateY(0); opacity: 1; }
         }
+        /* Banner Background */
+        .banner-bg {
+            background-image: url('https://raw.githubusercontent.com/Clean-Scripts/EasyGo-Address/refs/heads/main/Banner.png');
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+            position: relative;
+        }
+        .banner-overlay {
+            background: linear-gradient(135deg, rgba(37, 99, 235, 0.95) 0%, rgba(79, 70, 229, 0.95) 100%);
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            z-index: 0;
+        }
+        .content-wrapper {
+            position: relative;
+            z-index: 1;
+        }
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.8);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+        .modal-content {
+            background: white;
+            border-radius: 1rem;
+            padding: 2rem;
+            max-width: 500px;
+            width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+        .security-note {
+            border-left: 4px solid #ef4444;
+            background-color: #fef2f2;
+            padding: 1rem;
+            margin: 1rem 0;
+        }
     </style>
 </head>
-<body class="bg-gradient-to-br from-blue-50 to-gray-100 min-h-screen p-4 md:p-6">
-    <div class="max-w-5xl mx-auto">
-        <!-- Header -->
-        <header class="mb-8 text-center">
-            <h1 class="text-3xl md:text-4xl font-bold text-gray-800 mb-2">
-                <i class="fas fa-map-marker-alt text-blue-600 mr-2"></i>EasyGo-Address
-            </h1>
-            <p class="text-gray-600">Verify your address and calculate delivery charges instantly</p>
-        </header>
-
-        <div class="flex flex-col lg:flex-row gap-6">
-            <!-- Left Column: Address Form -->
-            <div class="lg:w-1/2">
-                <div class="bg-white rounded-2xl shadow-xl p-6 mb-6 slide-in">
-                    <h2 class="text-2xl font-bold text-gray-800 mb-6 flex items-center">
-                        <i class="fas fa-address-card text-blue-600 mr-3"></i>Address Details
-                    </h2>
-                    
-                    <!-- Offer Alert -->
-                    <div class="mb-6 p-4 bg-gradient-to-r from-green-50 to-blue-50 border border-green-200 rounded-xl">
-                        <div class="flex items-start">
-                            <i class="fas fa-gift text-green-600 text-xl mt-1 mr-3"></i>
-                            <div>
-                                <h3 class="font-bold text-green-800 mb-1">Special Offer Alert!</h3>
-                                <p class="text-green-700">
-                                    Orders within 4km from Prime Square, Omaxe City 1, Indore: 
-                                    <span class="font-bold">Will be free if exceed costs: ₹199/-</span>
-                                </p>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <!-- Address Form -->
-                    <form id="addressForm">
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <!-- Name -->
-                            <div class="md:col-span-2">
-                                <label class="block text-gray-700 mb-2 font-medium" for="name">
-                                    <i class="fas fa-user text-blue-500 mr-2"></i>Full Name
-                                </label>
-                                <input type="text" id="name" required 
-                                       class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
-                                       placeholder="Enter your full name">
-                            </div>
-                            
-                            <!-- Phone Number -->
-                            <div class="md:col-span-2">
-                                <label class="block text-gray-700 mb-2 font-medium" for="phone">
-                                    <i class="fas fa-phone text-blue-500 mr-2"></i>Phone Number
-                                </label>
-                                <input type="tel" id="phone" required 
-                                       class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
-                                       placeholder="Enter your 10-digit phone number">
-                            </div>
-                            
-                            <!-- Address Type -->
-                            <div>
-                                <label class="block text-gray-700 mb-2 font-medium" for="addressType">
-                                    <i class="fas fa-home text-blue-500 mr-2"></i>Address Type
-                                </label>
-                                <select id="addressType" 
-                                        class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition">
-                                    <option value="Flat">Flat</option>
-                                    <option value="House">House</option>
-                                    <option value="Office">Office</option>
-                                    <option value="PG">PG</option>
-                                </select>
-                            </div>
-                            
-                            <!-- Flat/House Number -->
-                            <div>
-                                <label class="block text-gray-700 mb-2 font-medium" for="houseNumber">
-                                    <i class="fas fa-building text-blue-500 mr-2"></i>Flat/House/Office/PG Number
-                                </label>
-                                <input type="text" id="houseNumber" required 
-                                       class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
-                                       placeholder="e.g., B-102">
-                            </div>
-                            
-                            <!-- Floor Number -->
-                            <div>
-                                <label class="block text-gray-700 mb-2 font-medium" for="floorNumber">
-                                    <i class="fas fa-stairs text-blue-500 mr-2"></i>Floor Number
-                                </label>
-                                <input type="text" id="floorNumber" 
-                                       class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
-                                       placeholder="e.g., 2nd Floor">
-                            </div>
-                            
-                            <!-- Locality -->
-                            <div class="md:col-span-2">
-                                <label class="block text-gray-700 mb-2 font-medium" for="locality">
-                                    <i class="fas fa-location-dot text-blue-500 mr-2"></i>Locality
-                                </label>
-                                <input type="text" id="locality" required 
-                                       class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
-                                       placeholder="Enter your locality">
-                            </div>
-                            
-                            <!-- Street Name -->
-                            <div class="md:col-span-2">
-                                <label class="block text-gray-700 mb-2 font-medium" for="street">
-                                    <i class="fas fa-road text-blue-500 mr-2"></i>Street Name
-                                </label>
-                                <input type="text" id="street" required 
-                                       class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
-                                       placeholder="Enter street name">
-                            </div>
-                            
-                            <!-- Pincode -->
-                            <div>
-                                <label class="block text-gray-700 mb-2 font-medium" for="pincode">
-                                    <i class="fas fa-map-pin text-blue-500 mr-2"></i>Pincode
-                                </label>
-                                <input type="text" id="pincode" required maxlength="6"
-                                       class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
-                                       placeholder="6-digit pincode">
-                            </div>
-                            
-                            <!-- City (auto-filled) -->
-                            <div>
-                                <label class="block text-gray-700 mb-2 font-medium" for="city">
-                                    <i class="fas fa-city text-blue-500 mr-2"></i>City
-                                </label>
-                                <input type="text" id="city" readonly
-                                       class="w-full p-3 border border-gray-300 rounded-lg bg-gray-50"
-                                       placeholder="Will auto-fetch from pincode">
-                            </div>
-                            
-                            <!-- State (auto-filled) -->
-                            <div class="md:col-span-2">
-                                <label class="block text-gray-700 mb-2 font-medium" for="state">
-                                    <i class="fas fa-flag text-blue-500 mr-2"></i>State
-                                </label>
-                                <input type="text" id="state" readonly
-                                       class="w-full p-3 border border-gray-300 rounded-lg bg-gray-50"
-                                       placeholder="Will auto-fetch from pincode">
-                            </div>
-                        </div>
-                        
-                        <!-- Location Button -->
-                        <div class="mt-6">
-                            <button type="button" id="getLocationBtn" 
-                                    class="w-full flex items-center justify-center gap-2 p-4 bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-semibold rounded-lg hover:from-blue-700 hover:to-indigo-700 transition-all duration-300 shadow-md hover:shadow-lg pulse">
-                                <i class="fas fa-map-marker-alt"></i>
-                                <span>Verify Location on Map</span>
-                            </button>
-                            <p class="text-sm text-gray-500 mt-2 text-center">
-                                Click to mark your location on the map for accurate delivery charge calculation
-                            </p>
-                        </div>
-                    </form>
+<body class="min-h-screen banner-bg">
+    <!-- Order Verification Modal -->
+    <div id="orderVerificationModal" class="modal">
+        <div class="modal-content">
+            <div class="text-center mb-6">
+                <div class="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <i class="fas fa-shield-alt text-3xl text-blue-600"></i>
                 </div>
+                <h2 class="text-2xl font-bold text-gray-800 mb-2">Order Verification Required</h2>
+                <p class="text-gray-600">For Security Purposes, Please Verify your Order Details</p>
             </div>
             
-            <!-- Right Column: Map and Charges -->
-            <div class="lg:w-1/2">
-                <!-- Map Container -->
-                <div class="bg-white rounded-2xl shadow-xl p-6 mb-6 slide-in">
-                    <h2 class="text-2xl font-bold text-gray-800 mb-6 flex items-center">
-                        <i class="fas fa-map text-blue-600 mr-3"></i>Location Verification
-                    </h2>
-                    
-                    <div id="map" class="map-container"></div>
-                    
-                    <div class="mt-4 flex flex-col sm:flex-row gap-3">
-                        <button id="useCurrentLocationBtn" 
-                                class="flex-1 flex items-center justify-center gap-2 p-3 bg-blue-100 text-blue-700 font-medium rounded-lg hover:bg-blue-200 transition">
-                            <i class="fas fa-location-crosshairs"></i>
-                            <span>Use My Current Location</span>
-                        </button>
-                        <button id="manualLocationBtn" 
-                                class="flex-1 flex items-center justify-center gap-2 p-3 bg-gray-100 text-gray-700 font-medium rounded-lg hover:bg-gray-200 transition">
-                            <i class="fas fa-map-pin"></i>
-                            <span>Drop Pin Manually</span>
-                        </button>
-                    </div>
-                    
-                    <div id="locationStatus" class="mt-4 p-3 rounded-lg hidden">
-                        <div class="flex items-center">
-                            <i class="fas fa-check-circle text-green-500 mr-2"></i>
-                            <span id="locationText" class="text-green-700 font-medium">Location verified!</span>
-                        </div>
-                    </div>
-                </div>
-                
-                <!-- Delivery Charges -->
-                <div id="deliveryChargesCard" class="bg-white rounded-2xl shadow-xl p-6 slide-in hidden">
-                    <h2 class="text-2xl font-bold text-gray-800 mb-6 flex items-center">
-                        <i class="fas fa-calculator text-blue-600 mr-3"></i>Delivery Charges
-                    </h2>
-                    
-                    <div class="space-y-4">
-                        <div class="flex justify-between items-center p-3 bg-blue-50 rounded-lg">
-                            <span class="font-medium text-gray-700">Distance from Prime Square</span>
-                            <span id="distanceValue" class="font-bold text-blue-700">-- km</span>
-                        </div>
-                        
-                        <div class="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
-                            <span class="font-medium text-gray-700">Base Fare</span>
-                            <span id="baseFare" class="font-bold text-gray-800">₹0</span>
-                        </div>
-                        
-                        <div class="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
-                            <span class="font-medium text-gray-700">GST (18%)</span>
-                            <span id="gstValue" class="font-bold text-gray-800">₹0</span>
-                        </div>
-                        
-                        <div class="border-t pt-4">
-                            <div class="flex justify-between items-center p-3 bg-gradient-to-r from-green-50 to-blue-50 border border-green-200 rounded-lg">
-                                <span class="font-bold text-gray-800 text-lg">Total Delivery Charge</span>
-                                <span id="totalCharge" class="font-bold text-green-700 text-2xl">₹0</span>
-                            </div>
-                        </div>
-                        
-                        <div id="offerNote" class="p-3 bg-yellow-50 border border-yellow-200 rounded-lg hidden">
-                            <p class="text-sm text-yellow-800">
-                                <i class="fas fa-info-circle mr-2"></i>
-                                <span id="offerText"></span>
-                            </p>
-                        </div>
-                        
-                        <!-- Action Buttons -->
-                        <div class="flex flex-col sm:flex-row gap-4 mt-6">
-                            <button id="approveBtn" 
-                                    class="flex-1 flex items-center justify-center gap-2 p-4 bg-gradient-to-r from-green-600 to-emerald-600 text-white font-bold rounded-lg hover:from-green-700 hover:to-emerald-700 transition-all duration-300 shadow-md hover:shadow-lg">
-                                <i class="fas fa-check-circle"></i>
-                                <span>Perfect! Pay & Deliver</span>
-                            </button>
-                            <button id="denyBtn" 
-                                    class="flex-1 flex items-center justify-center gap-2 p-4 bg-gradient-to-r from-red-600 to-pink-600 text-white font-bold rounded-lg hover:from-red-700 hover:to-pink-700 transition-all duration-300 shadow-md hover:shadow-lg">
-                                <i class="fas fa-times-circle"></i>
-                                <span>Deny & Request Refund</span>
-                            </button>
-                        </div>
-                        
-                        <p class="text-xs text-gray-500 text-center mt-4">
-                            <i class="fas fa-shield-alt mr-1"></i>Your data is secure. Details will be shared via WhatsApp for order confirmation.
+            <div class="security-note">
+                <div class="flex items-start">
+                    <i class="fas fa-exclamation-triangle text-red-500 mt-1 mr-3"></i>
+                    <div>
+                        <h4 class="font-bold text-red-700 mb-1">IMPORTANT SECURITY NOTICE</h4>
+                        <p class="text-red-600 text-sm">
+                            ⚠️ IMPORTANT:﻿Amount must Match Exactly.
+                            💸 Wrong Total = No Order / No Refund.
+                                Stay Secure, with Easy Go! 🛡️
                         </p>
                     </div>
                 </div>
-                
-                <!-- Result Message -->
-                <div id="resultMessage" class="hidden mt-6">
-                    <div class="bg-white rounded-2xl shadow-xl p-6 text-center">
-                        <div id="successMessage" class="hidden">
-                            <div class="text-green-500 text-6xl mb-4">
-                                <i class="fas fa-check-circle"></i>
+            </div>
+            
+            <div class="mb-6">
+                <label class="block text-gray-700 mb-2 font-medium" for="orderAmount">
+                    <i class="fas fa-rupee-sign text-blue-500 mr-2"></i>Order Amount (₹)
+                </label>
+                <input type="number" id="orderAmount" 
+                       class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
+                       placeholder="Enter exact order amount" min="0" step="0.01">
+                <p class="text-sm text-gray-500 mt-1">Enter the exact amount you paid through Razorpay</p>
+            </div>
+            
+            <div class="mb-6">
+                <label class="block text-gray-700 mb-2 font-medium" for="orderId">
+                    <i class="fas fa-receipt text-blue-500 mr-2"></i>Razorpay Order ID / Transaction ID
+                </label>
+                <input type="text" id="orderId" 
+                       class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
+                       placeholder="Enter your Razorpay Order ID">
+                <p class="text-sm text-gray-500 mt-1">Found in your Razorpay receipt or bank statement</p>
+            </div>
+            
+            <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+                <h4 class="font-bold text-blue-800 mb-2 flex items-center">
+                    <i class="fas fa-question-circle mr-2"></i>How to verify from Razorpay?
+                </h4>
+                <ol class="text-sm text-blue-700 list-decimal pl-5 space-y-1">
+                    <li>Login to your Razorpay account</li>
+                    <li>Go to "Transactions" section</li>
+                    <li>Find your recent payment</li>
+                    <li>Copy the Order ID and Amount</li>
+                    <li>Enter exact details here for verification</li>
+                </ol>
+            </div>
+            
+            <div class="flex flex-col sm:flex-row gap-3">
+                <button id="verifyOrderBtn" 
+                        class="flex-1 flex items-center justify-center gap-2 p-3 bg-gradient-to-r from-green-600 to-emerald-600 text-white font-bold rounded-lg hover:from-green-700 hover:to-emerald-700 transition">
+                    <i class="fas fa-check-circle"></i>
+                    <span>Verify & Continue</span>
+                </button>
+                <button id="cancelVerificationBtn" 
+                        class="flex-1 flex items-center justify-center gap-2 p-3 bg-gray-200 text-gray-700 font-medium rounded-lg hover:bg-gray-300 transition">
+                    <i class="fas fa-times"></i>
+                    <span>Cancel</span>
+                </button>
+            </div>
+            
+            <p class="text-xs text-gray-500 text-center mt-4">
+                <i class="fas fa-lock mr-1"></i>Your Payment Details are Secure and Encrypted
+            </p>
+        </div>
+    </div>
+    
+    <div class="banner-overlay"></div>
+    <div class="content-wrapper min-h-screen p-4 md:p-6">
+        <div class="max-w-5xl mx-auto">
+            <!-- Header with Logo -->
+            <header class="mb-8 text-center">
+                <div class="flex flex-col items-center mb-4">
+                    <!-- Logo -->
+                    <div class="flex items-center justify-center gap-3 mb-4">
+                        <div class="w-14 h-14 bg-white rounded-full flex items-center justify-center shadow-lg">
+                            <img src="https://raw.githubusercontent.com/Clean-Scripts/EasyGo-Address/refs/heads/main/logo.png" 
+                                 alt="EasyGo Logo" class="w-10 h-10 object-contain" onerror="this.style.display='none'">
+                        </div>
+                        <div>
+                            <h1 class="text-3xl md:text-4xl font-bold text-white mb-1">EasyGo-Address</h1>
+                            <p class="text-blue-100">Secure Delivery Solutions</p>
+                        </div>
+                    </div>
+                </div>
+                <p class="text-white/90 text-lg">Get Estimated Delivery Charge</p>
+                <div class="mt-2 inline-flex items-center bg-white/20 text-white/90 px-3 py-1 rounded-full text-sm">
+                    <i class="fas fa-shield-alt mr-2"></i>
+                    <span>Secure Order Verification Enabled</span>
+                </div>
+            </header>
+
+            <div class="flex flex-col lg:flex-row gap-6">
+                <!-- Left Column: Address Form -->
+                <div class="lg:w-1/2">
+                    <div class="bg-white/95 backdrop-blur-sm rounded-2xl shadow-2xl p-6 mb-6 slide-in">
+                        <div class="flex items-center justify-between mb-6">
+                            <h2 class="text-2xl font-bold text-gray-800 flex items-center">
+                                <i class="fas fa-address-card text-blue-600 mr-3"></i>Address Details
+                            </h2>
+                            <div class="text-sm bg-green-100 text-green-800 px-3 py-1 rounded-full">
+                                <i class="fas fa-check-circle mr-1"></i>
+                                <span id="verificationStatus">Order Verified</span>
                             </div>
-                            <h3 class="text-2xl font-bold text-gray-800 mb-2">Item is Delivered!</h3>
-                            <p class="text-gray-600 mb-4">Thank you for your order. Details have been shared via WhatsApp.</p>
-                            <button id="newOrderBtn" class="px-6 py-3 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition">
-                                <i class="fas fa-plus mr-2"></i>New Order
+                        </div>
+                        
+                        <!-- Verified Order Info -->
+                        <div id="verifiedOrderInfo" class="mb-6 p-4 bg-gradient-to-r from-green-50 to-blue-50 border border-green-200 rounded-xl">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <h3 class="font-bold text-green-800 mb-1 flex items-center">
+                                        <i class="fas fa-badge-check mr-2"></i>Order Verified Successfully
+                                    </h3>
+                                    <p class="text-green-700">
+                                        Order ID: <span id="displayOrderId" class="font-bold">ORD123456</span> | 
+                                        Amount: <span id="displayOrderAmount" class="font-bold">₹0.00</span>
+                                    </p>
+                                </div>
+                                <button id="editOrderBtn" class="text-blue-600 hover:text-blue-800 text-sm font-medium">
+                                    <i class="fas fa-edit mr-1"></i>Edit
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <!-- Offer Alert -->
+                        <div class="mb-6 p-4 bg-gradient-to-r from-yellow-50 to-orange-50 border border-yellow-200 rounded-xl">
+                            <div class="flex items-start">
+                                <i class="fas fa-gift text-orange-600 text-xl mt-1 mr-3"></i>
+                                <div>
+                                    <h3 class="font-bold text-orange-800 mb-1">Special Offer Alert!</h3>
+                                    <p class="text-orange-700">
+                                        Orders within 4km from Prime Square, Omaxe City 1, Indore: 
+                                        <span class="font-bold">Will be Free if Exceed Cost: ₹199/-</span>
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Address Form -->
+                        <form id="addressForm">
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <!-- Name -->
+                                <div class="md:col-span-2">
+                                    <label class="block text-gray-700 mb-2 font-medium" for="name">
+                                        <i class="fas fa-user text-blue-500 mr-2"></i>Full Name
+                                    </label>
+                                    <input type="text" id="name" required 
+                                           class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition bg-white/80"
+                                           placeholder="Enter your full name">
+                                </div>
+                                
+                                <!-- Phone Number -->
+                                <div class="md:col-span-2">
+                                    <label class="block text-gray-700 mb-2 font-medium" for="phone">
+                                        <i class="fas fa-phone text-blue-500 mr-2"></i>Phone Number
+                                    </label>
+                                    <input type="tel" id="phone" required 
+                                           class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition bg-white/80"
+                                           placeholder="Enter your 10-digit phone number">
+                                </div>
+                                
+                                <!-- Address Type -->
+                                <div>
+                                    <label class="block text-gray-700 mb-2 font-medium" for="addressType">
+                                        <i class="fas fa-home text-blue-500 mr-2"></i>Address Type
+                                    </label>
+                                    <select id="addressType" 
+                                            class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition bg-white/80">
+                                        <option value="Flat">Flat</option>
+                                        <option value="Hostel">Hostel</option>
+                                        <option value="House">House</option>
+                                        <option value="Office">Office</option>
+                                        <option value="PG">P.G.</option>
+                                    </select>
+                                </div>
+                                
+                                <!-- Flat/House Number -->
+                                <div>
+                                    <label class="block text-gray-700 mb-2 font-medium" for="houseNumber">
+                                        <i class="fas fa-building text-blue-500 mr-2"></i>Flat/House/Office Number
+                                    </label>
+                                    <input type="text" id="houseNumber" required 
+                                           class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition bg-white/80"
+                                           placeholder="e.g., B-102">
+                                </div>
+                                
+                                <!-- Floor Number -->
+                                <div>
+                                    <label class="block text-gray-700 mb-2 font-medium" for="floorNumber">
+                                        <i class="fas fa-stairs text-blue-500 mr-2"></i>Floor No.
+                                    </label>
+                                    <input type="text" id="floorNumber" 
+                                           class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition bg-white/80"
+                                           placeholder="e.g., 2nd Floor">
+                                </div>
+                                
+                                <!-- Locality -->
+                                <div class="md:col-span-2">
+                                    <label class="block text-gray-700 mb-2 font-medium" for="locality">
+                                        <i class="fas fa-location-dot text-blue-500 mr-2"></i>Locality
+                                    </label>
+                                    <input type="text" id="locality" required 
+                                           class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition bg-white/80"
+                                           placeholder="Enter your locality">
+                                </div>
+                                
+                                <!-- Street Name -->
+                                <div class="md:col-span-2">
+                                    <label class="block text-gray-700 mb-2 font-medium" for="street">
+                                        <i class="fas fa-road text-blue-500 mr-2"></i>Street Name
+                                    </label>
+                                    <input type="text" id="street" required 
+                                           class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition bg-white/80"
+                                           placeholder="Enter street name">
+                                </div>
+                                
+                                <!-- Pincode -->
+                                <div>
+                                    <label class="block text-gray-700 mb-2 font-medium" for="pincode">
+                                        <i class="fas fa-map-pin text-blue-500 mr-2"></i>Pincode
+                                    </label>
+                                    <input type="text" id="pincode" required maxlength="6"
+                                           class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition bg-white/80"
+                                           placeholder="6-digit pincode">
+                                </div>
+                                
+                                <!-- City (auto-filled) -->
+                                <div>
+                                    <label class="block text-gray-700 mb-2 font-medium" for="city">
+                                        <i class="fas fa-city text-blue-500 mr-2"></i>City
+                                    </label>
+                                    <input type="text" id="city" readonly
+                                           class="w-full p-3 border border-gray-300 rounded-lg bg-gray-50/80"
+                                           placeholder="Will auto-fetch from pincode">
+                                </div>
+                                
+                                <!-- State (auto-filled) -->
+                                <div class="md:col-span-2">
+                                    <label class="block text-gray-700 mb-2 font-medium" for="state">
+                                        <i class="fas fa-flag text-blue-500 mr-2"></i>State
+                                    </label>
+                                    <input type="text" id="state" readonly
+                                           class="w-full p-3 border border-gray-300 rounded-lg bg-gray-50/80"
+                                           placeholder="Will auto-fetch from pincode">
+                                </div>
+                                
+                                <!-- Special Request Note -->
+                                <div class="md:col-span-2">
+                                    <label class="block text-gray-700 mb-2 font-medium" for="specialRequest">
+                                        <i class="fas fa-sticky-note text-blue-500 mr-2"></i>Special Request Note
+                                        <span class="text-sm text-gray-500 font-normal">(IF ANY - Do not make any un-necessary requests)</span>
+                                    </label>
+                                    <textarea id="specialRequest" 
+                                              class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition bg-white/80"
+                                              rows="3"
+                                              placeholder="Any special instructions for delivery (e.g., call before delivery, leave at security, etc.)"></textarea>
+                                    <p class="text-xs text-gray-500 mt-1">
+                                        Please note: Unnecessary requests may delay your delivery or incur additional charges.
+                                    </p>
+                                </div>
+                            </div>
+                            
+                            <!-- Location Button -->
+                            <div class="mt-6">
+                                <button type="button" id="getLocationBtn" 
+                                        class="w-full flex items-center justify-center gap-2 p-4 bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-semibold rounded-lg hover:from-blue-700 hover:to-indigo-700 transition-all duration-300 shadow-lg hover:shadow-xl pulse">
+                                    <i class="fas fa-map-marker-alt"></i>
+                                    <span>Verify Location on Map</span>
+                                </button>
+                                <p class="text-sm text-gray-600 mt-2 text-center">
+                                    Click to mark your location on the map for accurate delivery charge calculation
+                                </p>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+                
+                <!-- Right Column: Map and Charges -->
+                <div class="lg:w-1/2">
+                    <!-- Map Container -->
+                    <div class="bg-white/95 backdrop-blur-sm rounded-2xl shadow-2xl p-6 mb-6 slide-in">
+                        <h2 class="text-2xl font-bold text-gray-800 mb-6 flex items-center">
+                            <i class="fas fa-map text-blue-600 mr-3"></i>Location Verification
+                        </h2>
+                        
+                        <div id="map" class="map-container"></div>
+                        
+                        <div class="mt-4 flex flex-col sm:flex-row gap-3">
+                            <button id="useCurrentLocationBtn" 
+                                    class="flex-1 flex items-center justify-center gap-2 p-3 bg-blue-100 text-blue-700 font-medium rounded-lg hover:bg-blue-200 transition">
+                                <i class="fas fa-location-crosshairs"></i>
+                                <span>Use My Current Location</span>
+                            </button>
+                            <button id="manualLocationBtn" 
+                                    class="flex-1 flex items-center justify-center gap-2 p-3 bg-gray-100 text-gray-700 font-medium rounded-lg hover:bg-gray-200 transition">
+                                <i class="fas fa-map-pin"></i>
+                                <span>Drop Pin Manually</span>
                             </button>
                         </div>
                         
-                        <div id="deniedMessage" class="hidden">
-                            <div class="text-red-500 text-6xl mb-4">
-                                <i class="fas fa-sad-cry"></i>
+                        <div id="locationStatus" class="mt-4 p-3 rounded-lg hidden">
+                            <div class="flex items-center">
+                                <i class="fas fa-check-circle text-green-500 mr-2"></i>
+                                <span id="locationText" class="text-green-700 font-medium">Location verified!</span>
                             </div>
-                            <h3 class="text-2xl font-bold text-gray-800 mb-2">We're Sorry to See you Go!</h3>
-                            <p class="text-gray-600 mb-4">Your refund request has been noted. Details have been shared via WhatsApp.</p>
-                            <button id="tryAgainBtn" class="px-6 py-3 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition">
-                                <i class="fas fa-redo mr-2"></i>Try Again
-                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- Delivery Charges -->
+                    <div id="deliveryChargesCard" class="bg-white/95 backdrop-blur-sm rounded-2xl shadow-2xl p-6 slide-in hidden">
+                        <h2 class="text-2xl font-bold text-gray-800 mb-6 flex items-center">
+                            <i class="fas fa-calculator text-blue-600 mr-3"></i>Delivery Charges
+                        </h2>
+                        
+                        <div class="space-y-4">
+                            <div class="flex justify-between items-center p-3 bg-blue-50/80 rounded-lg">
+                                <span class="font-medium text-gray-700">Distance from Prime Square</span>
+                                <span id="distanceValue" class="font-bold text-blue-700">-- km</span>
+                            </div>
+                            
+                            <div class="flex justify-between items-center p-3 bg-gray-50/80 rounded-lg">
+                                <span class="font-medium text-gray-700">Base Fare</span>
+                                <span id="baseFare" class="font-bold text-gray-800">₹0</span>
+                            </div>
+                            
+                            <div class="flex justify-between items-center p-3 bg-gray-50/80 rounded-lg">
+                                <span class="font-medium text-gray-700">GST (18%)</span>
+                                <span id="gstValue" class="font-bold text-gray-800">₹0</span>
+                            </div>
+                            
+                            <div class="border-t pt-4">
+                                <div class="flex justify-between items-center p-3 bg-gradient-to-r from-green-50/80 to-blue-50/80 border border-green-200 rounded-lg">
+                                    <span class="font-bold text-gray-800 text-lg">Total Delivery Charge</span>
+                                    <span id="totalCharge" class="font-bold text-green-700 text-2xl">₹0</span>
+                                </div>
+                            </div>
+                            
+                            <div id="offerNote" class="p-3 bg-yellow-50/80 border border-yellow-200 rounded-lg hidden">
+                                <p class="text-sm text-yellow-800">
+                                    <i class="fas fa-info-circle mr-2"></i>
+                                    <span id="offerText"></span>
+                                </p>
+                            </div>
+                            
+                            <!-- Security Warning -->
+                            <div class="p-3 bg-red-50/80 border border-red-200 rounded-lg">
+                                <div class="flex items-start">
+                                    <i class="fas fa-exclamation-triangle text-red-500 mt-1 mr-2"></i>
+                                    <div>
+                                        <p class="text-sm text-red-700 font-medium">
+                                            By proceeding, you confirm that the order amount entered matches your Razorpay transaction.
+                                            Mismatched amounts will result in order cancellation and security penalties.
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Action Buttons -->
+                            <div class="flex flex-col sm:flex-row gap-4 mt-6">
+                                <button id="approveBtn" 
+                                        class="flex-1 flex items-center justify-center gap-2 p-4 bg-gradient-to-r from-green-600 to-emerald-600 text-white font-bold rounded-lg hover:from-green-700 hover:to-emerald-700 transition-all duration-300 shadow-lg hover:shadow-xl">
+                                    <i class="fas fa-check-circle"></i>
+                                    <span>Perfect! Pay & Deliver</span>
+                                </button>
+                                <button id="denyBtn" 
+                                        class="flex-1 flex items-center justify-center gap-2 p-4 bg-gradient-to-r from-red-600 to-pink-600 text-white font-bold rounded-lg hover:from-red-700 hover:to-pink-700 transition-all duration-300 shadow-lg hover:shadow-xl">
+                                    <i class="fas fa-times-circle"></i>
+                                    <span>Deny & Request Refund</span>
+                                </button>
+                            </div>
+                            
+                            <p class="text-xs text-gray-600 text-center mt-4">
+                                <i class="fas fa-shield-alt mr-1"></i>Your data is secure. Details will be shared with EasyGo for order confirmation.
+                            </p>
+                        </div>
+                    </div>
+                    
+                    <!-- Result Message -->
+                    <div id="resultMessage" class="hidden mt-6">
+                        <div class="bg-white/95 backdrop-blur-sm rounded-2xl shadow-2xl p-6 text-center">
+                            <div id="successMessage" class="hidden">
+                                <div class="text-green-500 text-6xl mb-4">
+                                    <i class="fas fa-check-circle"></i>
+                                </div>
+                                <h3 class="text-2xl font-bold text-gray-800 mb-2">Order Confirmed!</h3>
+                                <p class="text-gray-600 mb-2">Thank you for your order. Details have been shared with EasyGo.</p>
+                                <p class="text-green-600 font-medium mb-4">
+                                    <i class="fas fa-truck mr-2"></i>Your item will be delivered shortly
+                                </p>
+                                <button id="newOrderBtn" class="px-6 py-3 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition shadow-md hover:shadow-lg">
+                                    <i class="fas fa-plus mr-2"></i>Place New Order
+                                </button>
+                            </div>
+                            
+                            <div id="deniedMessage" class="hidden">
+                                <div class="text-red-500 text-6xl mb-4">
+                                    <i class="fas fa-sad-cry"></i>
+                                </div>
+                                <h3 class="text-2xl font-bold text-gray-800 mb-2">We're Sorry to See you Go!</h3>
+                                <p class="text-gray-600 mb-2">Your refund request has been noted. Details have been shared with EasyGo.</p>
+                                <p class="text-red-600 font-medium mb-4">
+                                    <i class="fas fa-exclamation-triangle mr-2"></i>Security verification will be performed before refund
+                                </p>
+                                <button id="tryAgainBtn" class="px-6 py-3 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition shadow-md hover:shadow-lg">
+                                    <i class="fas fa-redo mr-2"></i>Try Again
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
+            
+            <!-- Footer -->
+            <footer class="mt-8 text-center text-white/80 text-sm">
+                <div class="flex flex-col md:flex-row justify-between items-center gap-4">
+                    <div class="flex items-center gap-2">
+                        <i class="fas fa-map-marker-alt"></i>
+                        <p>EasyGo | &copy; clean-scripts </p>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <i class="fas fa-shield-alt"></i>
+                        <p>Secure Payment Verification | Razorpay Integration</p>
+                    </div>
+                </div>
+            </footer>
         </div>
-        
-        <!-- Footer -->
-        <footer class="mt-8 text-center text-gray-500 text-sm">
-            <p>EasyGo-Address | Delivery Charge Calculator | Hosted on GitHub</p>
-            <p class="mt-1">WhatsApp Integration: +91 7651837322</p>
-        </footer>
     </div>
     
     <!-- Loading Overlay -->
     <div id="loadingOverlay" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
         <div class="bg-white p-8 rounded-2xl shadow-2xl text-center max-w-sm">
             <div class="loader mx-auto mb-4"></div>
-            <p class="text-lg font-medium text-gray-800">Calculating delivery charges...</p>
-            <p class="text-gray-600 mt-2">Please wait a moment</p>
+            <p class="text-lg font-medium text-gray-800">Verifying Order Details...</p>
+            <p class="text-gray-600 mt-2">Please wait while we validate your payment</p>
         </div>
     </div>
     
@@ -336,10 +547,13 @@
         let map;
         let userMarker;
         let userLocation = null;
-        const primeSquareLocation = [22.7533, 75.8937]; // Prime Square, Omaxe City 1, Indore
-        const taskusLocation = [22.7176, 75.8582]; // Taskus, Indore
-        const brilliantSapphireLocation = [22.7356, 75.8798]; // Brilliant Sapphire, Indore
-        const ligSquareLocation = [22.7471, 75.8990]; // LIG Square, Indore
+        let verifiedOrder = null;
+        
+        // Updated Correct Locations based on provided coordinates
+        const primeSquareLocation = [22.7767737, 75.9605483]; // Prime Square, Omaxe City 1, Indore
+        const taskusLocation = [22.7500367, 75.9021075]; // Taskus, Indore
+        const brilliantSapphireLocation = [22.7633039, 75.8814454]; // Brilliant Sapphire, Indore
+        const ligSquareLocation = [22.7336625, 75.8875296]; // L.I.G. Square, Indore
         
         // Pincode data (mock for demo - in production use an API)
         const pincodeData = {
@@ -358,8 +572,61 @@
             "452013": {city: "Indore", state: "Madhya Pradesh"},
             "452014": {city: "Indore", state: "Madhya Pradesh"},
             "452015": {city: "Indore", state: "Madhya Pradesh"},
-            "452016": {city: "Indore", state: "Madhya Pradesh"}
+            "452016": {city: "Indore", state: "Madhya Pradesh"},
+            "452017": {city: "Indore", state: "Madhya Pradesh"},
+            "452018": {city: "Indore", state: "Madhya Pradesh"}
         };
+        
+        // Order verification modal functions
+        function showOrderVerificationModal() {
+            document.getElementById('orderVerificationModal').style.display = 'flex';
+        }
+        
+        function hideOrderVerificationModal() {
+            document.getElementById('orderVerificationModal').style.display = 'none';
+        }
+        
+        function verifyOrder() {
+            const orderAmount = document.getElementById('orderAmount').value;
+            const orderId = document.getElementById('orderId').value;
+            
+            if (!orderAmount || orderAmount <= 0) {
+                alert('Please enter a valid order amount');
+                return;
+            }
+            
+            if (!orderId.trim()) {
+                alert('Please enter your Razorpay Order ID');
+                return;
+            }
+            
+            // Show loading
+            document.getElementById('loadingOverlay').classList.remove('hidden');
+            
+            // Simulate verification process (in real implementation, this would call your backend)
+            setTimeout(() => {
+                // Store verified order details
+                verifiedOrder = {
+                    amount: parseFloat(orderAmount).toFixed(2),
+                    orderId: orderId.trim(),
+                    verifiedAt: new Date().toISOString()
+                };
+                
+                // Update UI with verified order info
+                document.getElementById('displayOrderAmount').textContent = `₹${verifiedOrder.amount}`;
+                document.getElementById('displayOrderId').textContent = verifiedOrder.orderId;
+                document.getElementById('verifiedOrderInfo').classList.remove('hidden');
+                
+                // Hide modal and loading
+                hideOrderVerificationModal();
+                document.getElementById('loadingOverlay').classList.add('hidden');
+                
+                // Enable address form
+                document.getElementById('addressForm').querySelectorAll('input, select, textarea').forEach(el => {
+                    el.disabled = false;
+                });
+            }, 1500);
+        }
         
         // Initialize map
         function initMap(lat = primeSquareLocation[0], lng = primeSquareLocation[1]) {
@@ -369,26 +636,55 @@
                     attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
                 }).addTo(map);
                 
-                // Add reference markers
-                L.marker(primeSquareLocation).addTo(map)
-                    .bindPopup('<b>Prime Square, Omaxe City 1</b><br>Delivery reference point')
+                // Custom icons for markers
+                const primeIcon = L.divIcon({
+                    className: 'custom-div-icon',
+                    html: '<div style="background-color: #3b82f6; width: 30px; height: 30px; border-radius: 50%; border: 3px solid white; box-shadow: 0 2px 5px rgba(0,0,0,0.3);"></div>',
+                    iconSize: [30, 30],
+                    iconAnchor: [15, 15]
+                });
+                
+                const taskusIcon = L.divIcon({
+                    className: 'custom-div-icon',
+                    html: '<div style="background-color: #ef4444; width: 30px; height: 30px; border-radius: 50%; border: 3px solid white; box-shadow: 0 2px 5px rgba(0,0,0,0.3);"></div>',
+                    iconSize: [30, 30],
+                    iconAnchor: [15, 15]
+                });
+                
+                const sapphireIcon = L.divIcon({
+                    className: 'custom-div-icon',
+                    html: '<div style="background-color: #10b981; width: 30px; height: 30px; border-radius: 50%; border: 3px solid white; box-shadow: 0 2px 5px rgba(0,0,0,0.3);"></div>',
+                    iconSize: [30, 30],
+                    iconAnchor: [15, 15]
+                });
+                
+                const ligIcon = L.divIcon({
+                    className: 'custom-div-icon',
+                    html: '<div style="background-color: #f59e0b; width: 30px; height: 30px; border-radius: 50%; border: 3px solid white; box-shadow: 0 2px 5px rgba(0,0,0,0.3);"></div>',
+                    iconSize: [30, 30],
+                    iconAnchor: [15, 15]
+                });
+                
+                // Add reference markers with updated locations
+                L.marker(primeSquareLocation, {icon: primeIcon}).addTo(map)
+                    .bindPopup('<b>Prime Square, Omaxe City 1</b><br>Delivery reference point<br>Free delivery within 4km')
                     .openPopup();
                 
-                L.marker(taskusLocation).addTo(map)
-                    .bindPopup('<b>Taskus, Indore</b>')
+                L.marker(taskusLocation, {icon: taskusIcon}).addTo(map)
+                    .bindPopup('<b>Taskus, Indore</b><br>Fixed charge: ₹20 + GST')
                     .openPopup();
                 
-                L.marker(brilliantSapphireLocation).addTo(map)
-                    .bindPopup('<b>Brilliant Sapphire, Indore</b>')
+                L.marker(brilliantSapphireLocation, {icon: sapphireIcon}).addTo(map)
+                    .bindPopup('<b>Brilliant Sapphire, Indore</b><br>Fixed charge: ₹15 + GST')
                     .openPopup();
                     
-                L.marker(ligSquareLocation).addTo(map)
-                    .bindPopup('<b>LIG Square, Indore</b>')
+                L.marker(ligSquareLocation, {icon: ligIcon}).addTo(map)
+                    .bindPopup('<b>LIG Square, Indore</b><br>Charge: ₹3 per 500m + GST')
                     .openPopup();
                     
                 // Add a circle for 4km radius from Prime Square
                 L.circle(primeSquareLocation, {
-                    color: 'blue',
+                    color: '#3b82f6',
                     fillColor: '#3b82f6',
                     fillOpacity: 0.1,
                     radius: 4000 // 4km in meters
@@ -502,15 +798,31 @@
                 map.removeLayer(userMarker);
             }
             
+            // Custom user marker
+            const userIcon = L.divIcon({
+                className: 'custom-div-icon',
+                html: '<div class="pulse" style="background-color: #8b5cf6; width: 36px; height: 36px; border-radius: 50%; border: 4px solid white; box-shadow: 0 3px 8px rgba(0,0,0,0.4); display: flex; align-items: center; justify-content: center;"><i class="fas fa-user" style="color: white; font-size: 14px;"></i></div>',
+                iconSize: [36, 36],
+                iconAnchor: [18, 18]
+            });
+            
             // Add new marker
             userMarker = L.marker([lat, lng], {
-                icon: L.divIcon({
-                    className: 'custom-marker',
-                    html: '<div class="pulse w-8 h-8 bg-blue-600 rounded-full border-4 border-white shadow-lg"></div>',
-                    iconSize: [32, 32],
-                    iconAnchor: [16, 16]
-                })
+                icon: userIcon,
+                draggable: true
             }).addTo(map);
+            
+            // Update location if marker is dragged
+            userMarker.on('dragend', function(event) {
+                const marker = event.target;
+                const position = marker.getLatLng();
+                userLocation = { lat: position.lat, lng: position.lng };
+                updateDeliveryCharges();
+                
+                // Update location status
+                const locationText = document.getElementById('locationText');
+                locationText.textContent = `Location updated: ${position.lat.toFixed(4)}, ${position.lng.toFixed(4)}`;
+            });
             
             // Center map on user location
             map.setView([lat, lng], 14);
@@ -531,6 +843,12 @@
         
         // Get current location
         function getCurrentLocation() {
+            // Check if order is verified
+            if (!verifiedOrder) {
+                alert('Please verify your order first before checking location');
+                return;
+            }
+            
             document.getElementById('loadingOverlay').classList.remove('hidden');
             
             if (navigator.geolocation) {
@@ -544,6 +862,11 @@
                         console.error("Error getting location:", error);
                         alert("Unable to get your location. Please allow location access or use manual pin drop.");
                         document.getElementById('loadingOverlay').classList.add('hidden');
+                    },
+                    {
+                        enableHighAccuracy: true,
+                        timeout: 10000,
+                        maximumAge: 0
                     }
                 );
             } else {
@@ -552,8 +875,8 @@
             }
         }
         
-        // Send data to WhatsApp
-        function sendToWhatsApp(action) {
+        // Send data to backend (WhatsApp/Server)
+        function sendOrderDetails(action) {
             const name = document.getElementById('name').value;
             const phone = document.getElementById('phone').value;
             const addressType = document.getElementById('addressType').value;
@@ -564,18 +887,42 @@
             const pincode = document.getElementById('pincode').value;
             const city = document.getElementById('city').value;
             const state = document.getElementById('state').value;
+            const specialRequest = document.getElementById('specialRequest').value;
             
             const distance = document.getElementById('distanceValue').textContent;
             const totalCharge = document.getElementById('totalCharge').textContent;
             
-            const message = `EasyGo-Address ${action}%0A%0A` +
-                `*Name:* ${name}%0A` +
-                `*Phone:* ${phone}%0A` +
-                `*Address:* ${houseNumber}, ${floorNumber}, ${street}, ${locality}, ${city}, ${state} - ${pincode}%0A` +
-                `*Address Type:* ${addressType}%0A` +
-                `*Distance from Prime Square:* ${distance}%0A` +
-                `*Total Delivery Charge:* ${totalCharge}%0A` +
-                `*User Action:* ${action}`;
+            const orderDetails = {
+                action: action,
+                orderId: verifiedOrder.orderId,
+                orderAmount: verifiedOrder.amount,
+                customerName: name,
+                phone: phone,
+                address: `${houseNumber}, ${floorNumber}, ${street}, ${locality}, ${city}, ${state} - ${pincode}`,
+                addressType: addressType,
+                distance: distance,
+                deliveryCharge: totalCharge,
+                specialRequest: specialRequest,
+                userLocation: userLocation,
+                timestamp: new Date().toLocaleString()
+            };
+            
+            // In production, send to your backend/WhatsApp
+            // For demo, we'll just show a confirmation
+            
+            // WhatsApp message format
+            const message = `EasyGo Order ${action}%0A%0A` +
+                `*Order ID:* ${orderDetails.orderId}%0A` +
+                `*Order Amount:* ₹${orderDetails.orderAmount}%0A` +
+                `*Name:* ${orderDetails.customerName}%0A` +
+                `*Phone:* ${orderDetails.phone}%0A` +
+                `*Address:* ${orderDetails.address}%0A` +
+                `*Address Type:* ${orderDetails.addressType}%0A` +
+                `*Distance:* ${orderDetails.distance}%0A` +
+                `*Delivery Charge:* ${orderDetails.deliveryCharge}%0A` +
+                `*Special Request:* ${orderDetails.specialRequest || 'None'}%0A` +
+                `*Action:* ${action}%0A` +
+                `*Timestamp:* ${orderDetails.timestamp}`;
             
             // Open WhatsApp with pre-filled message
             window.open(`https://wa.me/917651837322?text=${message}`, '_blank');
@@ -588,8 +935,9 @@
             document.getElementById('deniedMessage').classList.add('hidden');
             document.getElementById('deliveryChargesCard').classList.add('hidden');
             document.getElementById('locationStatus').classList.add('hidden');
+            document.getElementById('verifiedOrderInfo').classList.add('hidden');
             
-            // Clear form (except for address type)
+            // Clear form
             document.getElementById('name').value = '';
             document.getElementById('phone').value = '';
             document.getElementById('houseNumber').value = '';
@@ -599,8 +947,14 @@
             document.getElementById('pincode').value = '';
             document.getElementById('city').value = '';
             document.getElementById('state').value = '';
+            document.getElementById('specialRequest').value = '';
             
-            // Reset map to default view
+            // Disable form until order verification
+            document.getElementById('addressForm').querySelectorAll('input, select, textarea').forEach(el => {
+                el.disabled = true;
+            });
+            
+            // Reset map
             initMap();
             
             // Remove user marker
@@ -609,12 +963,35 @@
                 userMarker = null;
                 userLocation = null;
             }
+            
+            // Show verification modal again
+            verifiedOrder = null;
+            setTimeout(() => {
+                showOrderVerificationModal();
+            }, 500);
         }
         
         // Event Listeners
         document.addEventListener('DOMContentLoaded', function() {
+            // Show order verification modal on page load
+            setTimeout(() => {
+                showOrderVerificationModal();
+            }, 500);
+            
             // Initialize map
             initMap();
+            
+            // Disable address form until order verification
+            document.getElementById('addressForm').querySelectorAll('input, select, textarea').forEach(el => {
+                el.disabled = true;
+            });
+            
+            // Order verification modal buttons
+            document.getElementById('verifyOrderBtn').addEventListener('click', verifyOrder);
+            document.getElementById('cancelVerificationBtn').addEventListener('click', hideOrderVerificationModal);
+            document.getElementById('editOrderBtn').addEventListener('click', function() {
+                showOrderVerificationModal();
+            });
             
             // Pincode lookup
             document.getElementById('pincode').addEventListener('input', function() {
@@ -631,6 +1008,12 @@
             
             // Get location button
             document.getElementById('getLocationBtn').addEventListener('click', function() {
+                // Check if order is verified
+                if (!verifiedOrder) {
+                    alert('Please verify your order first before checking location');
+                    return;
+                }
+                
                 // Validate form first
                 const requiredFields = ['name', 'phone', 'houseNumber', 'locality', 'street', 'pincode'];
                 let isValid = true;
@@ -658,7 +1041,13 @@
             
             // Manual location button
             document.getElementById('manualLocationBtn').addEventListener('click', function() {
-                alert('Click on the map to drop a pin at your location.');
+                // Check if order is verified
+                if (!verifiedOrder) {
+                    alert('Please verify your order first before setting location');
+                    return;
+                }
+                
+                alert('Click on the map to drop a pin at your location. You can also drag the pin to adjust.');
                 
                 // Set up map click listener
                 map.once('click', function(e) {
@@ -668,16 +1057,26 @@
             
             // Approve button
             document.getElementById('approveBtn').addEventListener('click', function() {
+                if (!verifiedOrder) {
+                    alert('Please verify your order first');
+                    return;
+                }
+                
                 document.getElementById('resultMessage').classList.remove('hidden');
                 document.getElementById('successMessage').classList.remove('hidden');
-                sendToWhatsApp('APPROVED - Order Confirmed');
+                sendOrderDetails('APPROVED - Order Confirmed');
             });
             
             // Deny button
             document.getElementById('denyBtn').addEventListener('click', function() {
+                if (!verifiedOrder) {
+                    alert('Please verify your order first');
+                    return;
+                }
+                
                 document.getElementById('resultMessage').classList.remove('hidden');
                 document.getElementById('deniedMessage').classList.remove('hidden');
-                sendToWhatsApp('DENIED - Refund Requested');
+                sendOrderDetails('DENIED - Refund Requested');
             });
             
             // New order button
@@ -687,7 +1086,7 @@
             document.getElementById('tryAgainBtn').addEventListener('click', resetForm);
             
             // Form validation styling
-            const formInputs = document.querySelectorAll('#addressForm input, #addressForm select');
+            const formInputs = document.querySelectorAll('#addressForm input, #addressForm select, #addressForm textarea');
             formInputs.forEach(input => {
                 input.addEventListener('blur', function() {
                     if (this.value.trim() === '' && this.hasAttribute('required')) {
