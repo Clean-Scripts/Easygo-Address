@@ -44,7 +44,7 @@
             from { transform: translateY(20px); opacity: 0; }
             to { transform: translateY(0); opacity: 1; }
         }
-        /* Banner Background - NO BLUE OVERLAY */
+        /* Banner Background */
         .banner-bg {
             background-image: url('https://raw.githubusercontent.com/Clean-Scripts/EasyGo-Address/refs/heads/main/Banner.png');
             background-size: cover;
@@ -108,31 +108,6 @@
             background-color: #e5e7eb;
             color: #6b7280;
         }
-        .tooltip {
-            position: relative;
-            display: inline-block;
-        }
-        .tooltip .tooltiptext {
-            visibility: hidden;
-            width: 200px;
-            background-color: #1f2937;
-            color: #fff;
-            text-align: center;
-            border-radius: 6px;
-            padding: 8px;
-            position: absolute;
-            z-index: 1;
-            bottom: 125%;
-            left: 50%;
-            margin-left: -100px;
-            opacity: 0;
-            transition: opacity 0.3s;
-            font-size: 12px;
-        }
-        .tooltip:hover .tooltiptext {
-            visibility: visible;
-            opacity: 1;
-        }
         .floating-label {
             position: relative;
             margin-bottom: 20px;
@@ -161,27 +136,10 @@
             10%, 30%, 50%, 70%, 90% {transform: translateX(-5px);}
             20%, 40%, 60%, 80% {transform: translateX(5px);}
         }
-        .confetti {
-            position: fixed;
-            width: 10px;
-            height: 10px;
-            background-color: #f00;
-            opacity: 0;
-            z-index: 9999;
-        }
     </style>
 </head>
 <body class="min-h-screen banner-bg">
-    <!-- Order Verification Modal -->
-    <div id="orderVerificationModal" class="modal">
-        <div class="modal-content">
-            <div class="text-center mb-6">
-                <div class="w-16 h-16 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <i class="fas fa-lock text-2xl text-white"></i>
-                </div>
-                <h2 class="text-2xl font-bold text-gray-800 mb-2">🎉 Welcome to EasyGo! 🎉</h2>
-            </div>
-            
+    
     <div class="content-wrapper min-h-screen p-4 md:p-6">
         <div class="max-w-6xl mx-auto">
             <!-- Header with Logo -->
@@ -203,12 +161,12 @@
                 <!-- Progress Bar -->
                 <div class="max-w-md mx-auto mb-6">
                     <div class="flex items-center justify-between mb-2">
-                        <span class="text-white text-sm">Step 1: Verify Order</span>
-                        <span class="text-white text-sm">Step 2: Enter Address</span>
-                        <span class="text-white text-sm">Step 3: Get Charges</span>
+                        <span class="text-white text-sm">Step 1: Cart</span>
+                        <span class="text-white text-sm">Step 2: Address</span>
+                        <span class="text-white text-sm">Step 3: Payment</span>
                     </div>
                     <div class="w-full bg-white/30 h-2 rounded-full overflow-hidden">
-                        <div id="progressBar" class="h-full bg-gradient-to-r from-green-400 to-blue-500 transition-all duration-500" style="width: 33%"></div>
+                        <div id="progressBar" class="h-full bg-gradient-to-r from-green-400 to-blue-500 transition-all duration-500" style="width: 66%"></div>
                     </div>
                 </div>
             </header>
@@ -222,31 +180,12 @@
                                 <i class="fas fa-map-marker-alt text-blue-500 mr-3 bg-blue-100 p-3 rounded-full"></i>
                                 Address Details
                             </h2>
-                            <div id="orderStatusBadge" class="hidden">
-                                <div class="flex items-center gap-2 bg-gradient-to-r from-yellow-100 to-orange-100 text-yellow-800 px-4 py-2 rounded-full shadow">
-                                    <i class="fas fa-clock text-yellow-600"></i>
-                                    <span class="font-bold">Pending Verification</span>
-                                    <span id="orderAmountBadge" class="bg-yellow-600 text-white px-2 py-1 rounded-full text-sm">₹0</span>
+                            <div id="cart-summary-badge" class="hidden">
+                                <div class="flex items-center gap-2 bg-gradient-to-r from-green-100 to-emerald-100 text-green-800 px-4 py-2 rounded-full shadow">
+                                    <i class="fas fa-shopping-cart text-green-600"></i>
+                                    <span class="font-bold" id="cart-items-count">0 items</span>
+                                    <span id="cart-total-badge" class="bg-green-600 text-white px-2 py-1 rounded-full text-sm">₹0</span>
                                 </div>
-                            </div>
-                        </div>
-                        
-                        <!-- Pending Verification Info -->
-                        <div id="pendingVerificationInfo" class="mb-6 p-4 bg-gradient-to-r from-yellow-50 to-orange-50 border border-yellow-200 rounded-xl hidden">
-                            <div class="flex items-center justify-between">
-                                <div>
-                                    <h3 class="font-bold text-yellow-800 mb-1 flex items-center">
-                                        <i class="fas fa-clock mr-2"></i>Order Pending Verification
-                                    </h3>
-                                    <p class="text-yellow-700 text-sm">
-                                        Order ID: <span id="displayOrderId" class="font-bold">--</span> | 
-                                        Amount: <span id="displayOrderAmount" class="font-bold">₹0.00</span>
-                                        <br><span class="text-xs">⚠️ Status: Pending confirmation from EasyGo</span>
-                                    </p>
-                                </div>
-                                <button id="editOrderBtn" class="text-blue-600 hover:text-blue-800 text-sm font-medium">
-                                    <i class="fas fa-edit mr-1"></i>Edit
-                                </button>
                             </div>
                         </div>
                         
@@ -411,8 +350,37 @@
                                 </div>
                             </div>
                             
-                            <!-- Location Button -->
+                            <!-- Delivery Mode Selection -->
                             <div class="mt-8">
+                                <h3 class="text-xl font-bold mb-4">Select Delivery Mode</h3>
+                                <div class="grid grid-cols-2 gap-4">
+                                    <div id="delivery-option" class="border-2 border-blue-200 bg-blue-50 rounded-xl p-4 cursor-pointer">
+                                        <div class="flex items-center gap-3">
+                                            <div class="w-10 h-10 bg-blue-500 rounded-full flex items-center justify-center">
+                                                <i class="fas fa-motorcycle text-white"></i>
+                                            </div>
+                                            <div>
+                                                <p class="font-bold">Home Delivery</p>
+                                                <p class="text-sm text-blue-600">Delivered to your address</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div id="takeaway-option" class="border-2 border-gray-200 rounded-xl p-4 cursor-pointer hover:border-green-500">
+                                        <div class="flex items-center gap-3">
+                                            <div class="w-10 h-10 bg-gray-300 rounded-full flex items-center justify-center">
+                                                <i class="fas fa-store text-gray-600"></i>
+                                            </div>
+                                            <div>
+                                                <p class="font-bold">Takeaway</p>
+                                                <p class="text-sm text-gray-600">Pickup from Prime Square</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Location Button (for delivery only) -->
+                            <div id="location-section" class="mt-8">
                                 <button type="button" id="getLocationBtn" 
                                         class="w-full flex items-center justify-center gap-3 p-5 bg-gradient-to-r from-blue-500 to-purple-500 text-white font-bold rounded-xl hover:from-blue-600 hover:to-purple-600 transition-all duration-300 shadow-xl hover:shadow-2xl transform hover:-translate-y-1 pulse">
                                     <i class="fas fa-map-marker-alt text-xl"></i>
@@ -431,7 +399,7 @@
                 <!-- Right Column: Map and Charges -->
                 <div class="lg:w-1/2">
                     <!-- Map Container -->
-                    <div class="bg-white/95 backdrop-blur-sm rounded-2xl shadow-2xl p-8 mb-6 slide-in border border-white/20">
+                    <div id="map-section" class="bg-white/95 backdrop-blur-sm rounded-2xl shadow-2xl p-8 mb-6 slide-in border border-white/20">
                         <h2 class="text-3xl font-bold text-gray-800 mb-6 flex items-center">
                             <i class="fas fa-map-marked-alt text-blue-500 mr-3 bg-blue-100 p-3 rounded-full"></i>
                             Live Location Verification
@@ -555,27 +523,16 @@
                                 </div>
                             </div>
                             
-                            <!-- Regular Offer Note -->
-                            <div id="offerNote" class="p-4 bg-yellow-50 border-2 border-yellow-200 rounded-xl hidden">
-                                <div class="flex items-start gap-3">
-                                    <i class="fas fa-info-circle text-yellow-500 text-xl mt-1"></i>
-                                    <div>
-                                        <p class="text-sm text-yellow-800">
-                                            <span id="offerText"></span>
-                                        </p>
+                            <!-- Delivery Range Warning -->
+                            <div id="rangeWarning" class="p-5 bg-red-50 border-2 border-red-200 rounded-xl hidden">
+                                <div class="flex items-center gap-4">
+                                    <div class="w-14 h-14 bg-red-500 rounded-full flex items-center justify-center">
+                                        <i class="fas fa-exclamation-triangle text-2xl text-white"></i>
                                     </div>
-                                </div>
-                            </div>
-                            
-                            <!-- Security Warning -->
-                            <div class="p-4 bg-red-50 border-2 border-red-200 rounded-xl">
-                                <div class="flex items-start gap-3">
-                                    <i class="fas fa-shield-alt text-red-500 text-xl mt-1"></i>
                                     <div>
-                                        <h4 class="font-bold text-red-700 mb-1">Security Verification Required</h4>
-                                        <p class="text-sm text-red-600">
-                                            Your order is currently <span class="font-bold">PENDING VERIFICATION</span> by EasyGo.
-                                            <span class="font-bold">Mismatched Amounts = Order Cancellation + Security Penalty</span>
+                                        <h4 class="font-bold text-red-800 text-lg mb-1">⚠️ Beyond Delivery Range</h4>
+                                        <p class="text-red-700">
+                                            Your location is beyond our delivery range. Please select <span class="font-bold">Takeaway</span> option.
                                         </p>
                                     </div>
                                 </div>
@@ -583,59 +540,68 @@
                             
                             <!-- Action Buttons -->
                             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-8">
-                                <button id="approveBtn" 
+                                <button id="proceedToPaymentBtn" 
                                         class="flex items-center justify-center gap-3 p-5 bg-gradient-to-r from-green-500 to-emerald-500 text-white font-bold rounded-xl hover:from-green-600 hover:to-emerald-600 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-1 group">
                                     <i class="fas fa-check-circle text-xl group-hover:scale-110 transition-transform"></i>
-                                    <span class="text-lg">✅ Confirm Order</span>
+                                    <span class="text-lg">✅ Proceed to Payment</span>
                                 </button>
-                                <button id="denyBtn" 
-                                        class="flex items-center justify-center gap-3 p-5 bg-gradient-to-r from-red-500 to-pink-500 text-white font-bold rounded-xl hover:from-red-600 hover:to-pink-600 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-1 group">
-                                    <i class="fas fa-times-circle text-xl group-hover:scale-110 transition-transform"></i>
-                                    <span class="text-lg">❌ Cancel Order</span>
-                                </button>
+                                <a href="https://clean-scripts.github.io/Easygo-Cart/" 
+                                   class="flex items-center justify-center gap-3 p-5 bg-gray-100 text-gray-700 font-bold rounded-xl hover:bg-gray-200 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-1 group">
+                                    <i class="fas fa-arrow-left text-xl"></i>
+                                    <span class="text-lg">← Back to Cart</span>
+                                </a>
                             </div>
                             
                             <p class="text-xs text-gray-600 text-center mt-6 flex items-center justify-center">
                                 <i class="fas fa-shield-alt mr-2 text-blue-500"></i>
-                                Your Data is Secure. Details will be shared with EasyGo for Order Verification.
+                                Your Data is Secure. Details will be shared with EasyGo for Order Processing.
                             </p>
                         </div>
                     </div>
                     
-                    <!-- Result Message -->
-                    <div id="resultMessage" class="hidden mt-6">
-                        <div class="bg-white/95 backdrop-blur-sm rounded-2xl shadow-2xl p-8 text-center border border-white/20">
-                            <div id="successMessage" class="hidden">
-                                <div class="text-green-500 text-8xl mb-6 animate-bounce">
-                                    <i class="fas fa-check-circle"></i>
+                    <!-- Takeaway Summary -->
+                    <div id="takeawaySummary" class="bg-white/95 backdrop-blur-sm rounded-2xl shadow-2xl p-8 slide-in border border-white/20 hidden">
+                        <h2 class="text-3xl font-bold text-gray-800 mb-6 flex items-center">
+                            <i class="fas fa-store text-green-500 mr-3 bg-green-100 p-3 rounded-full"></i>
+                            Takeaway Summary
+                        </h2>
+                        
+                        <div class="space-y-5">
+                            <div class="p-5 bg-gradient-to-r from-green-50 to-emerald-50 border-2 border-green-200 rounded-xl">
+                                <div class="flex items-center gap-4">
+                                    <div class="w-14 h-14 bg-green-500 rounded-full flex items-center justify-center">
+                                        <i class="fas fa-store text-2xl text-white"></i>
+                                    </div>
+                                    <div>
+                                        <h4 class="font-bold text-green-800 text-lg mb-1">🛍️ Takeaway Selected</h4>
+                                        <p class="text-green-700">
+                                            Pickup from: <span class="font-bold">Prime Square, Omaxe City 1, Indore</span>
+                                        </p>
+                                        <p class="text-sm text-green-600 mt-2">
+                                            Timings: 6:00 PM - 10:00 PM
+                                        </p>
+                                    </div>
                                 </div>
-                                <h3 class="text-3xl font-bold text-gray-800 mb-4">🎊 Order Submitted for Verification!</h3>
-                                <p class="text-gray-600 mb-3 text-lg">Your Order Details - shared with EasyGo for Verification.</p>
-                                <p class="text-green-600 font-medium mb-6 text-lg">
-                                    <i class="fas fa-clock mr-2"></i>Status: Pending Verification (Will be confirmed within 2 minutes)
-                                </p>
-                                <p class="text-sm text-gray-500 mb-6 p-4 bg-blue-50 rounded-lg">
-                                    <i class="fas fa-map-marker-alt mr-2"></i>
-                                    Location Link has been shared for accurate Delivery !!
-                                </p>
-                                <button id="newOrderBtn" class="px-8 py-4 bg-gradient-to-r from-blue-500 to-purple-500 text-white font-bold rounded-xl hover:from-blue-600 hover:to-purple-600 transition shadow-xl hover:shadow-2xl transform hover:-translate-y-1">
-                                    <i class="fas fa-plus mr-2"></i>Place Another Order
+                            </div>
+                            
+                            <!-- Action Buttons -->
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-8">
+                                <button id="proceedToPaymentTakeawayBtn" 
+                                        class="flex items-center justify-center gap-3 p-5 bg-gradient-to-r from-green-500 to-emerald-500 text-white font-bold rounded-xl hover:from-green-600 hover:to-emerald-600 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-1 group">
+                                    <i class="fas fa-check-circle text-xl group-hover:scale-110 transition-transform"></i>
+                                    <span class="text-lg">✅ Proceed to Payment</span>
+                                </button>
+                                <button id="switchToDeliveryBtn" 
+                                        class="flex items-center justify-center gap-3 p-5 bg-blue-100 text-blue-700 font-bold rounded-xl hover:bg-blue-200 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-1 group">
+                                    <i class="fas fa-motorcycle text-xl"></i>
+                                    <span class="text-lg">Switch to Delivery</span>
                                 </button>
                             </div>
                             
-                            <div id="deniedMessage" class="hidden">
-                                <div class="text-red-500 text-8xl mb-6 animate-pulse">
-                                    <i class="fas fa-sad-cry"></i>
-                                </div>
-                                <h3 class="text-3xl font-bold text-gray-800 mb-4">Order Cancelled 😢</h3>
-                                <p class="text-gray-600 mb-3 text-lg">Your cancellation Request Noted✅. Details shared with EasyGo📱. Refund💸 will be visible in your account within 5 Working Days.</p>
-                                <p class="text-red-600 font-medium mb-6 text-lg">
-                                    <i class="fas fa-exclamation-triangle mr-2"></i>Security Verification will be Performed before Refund
-                                </p>
-                                <button id="tryAgainBtn" class="px-8 py-4 bg-gradient-to-r from-blue-500 to-purple-500 text-white font-bold rounded-xl hover:from-blue-600 hover:to-purple-600 transition shadow-xl hover:shadow-2xl transform hover:-translate-y-1">
-                                    <i class="fas fa-redo mr-2"></i>Try Again
-                                </button>
-                            </div>
+                            <p class="text-xs text-gray-600 text-center mt-6 flex items-center justify-center">
+                                <i class="fas fa-clock mr-2 text-green-500"></i>
+                                Your order will be prepared and ready for pickup in 20-25 minutes
+                            </p>
                         </div>
                     </div>
                 </div>
@@ -683,7 +649,7 @@
         let map;
         let userMarker;
         let userLocation = null;
-        let pendingOrder = null; // Changed from verifiedOrder to pendingOrder
+        let deliveryMode = 'delivery'; // 'delivery' or 'takeaway'
         let googleMapsLink = "";
         
         // Updated Correct Locations based on provided coordinates
@@ -713,15 +679,6 @@
             "452017": {city: "Indore", state: "Madhya Pradesh"},
             "452018": {city: "Indore", state: "Madhya Pradesh"}
         };
-        
-        // Order verification modal functions
-        function showOrderVerificationModal() {
-            document.getElementById('orderVerificationModal').style.display = 'flex';
-        }
-        
-        function hideOrderVerificationModal() {
-            document.getElementById('orderVerificationModal').style.display = 'none';
-        }
         
         function updateProgressBar(step) {
             const progressBar = document.getElementById('progressBar');
@@ -753,60 +710,6 @@
             }
         }
         
-        function verifyOrder() {
-            const orderAmount = document.getElementById('orderAmount').value;
-            const orderId = document.getElementById('orderId').value;
-            
-            // Validation
-            if (!orderAmount || orderAmount <= 0) {
-                document.getElementById('orderAmount').classList.add('shake');
-                setTimeout(() => document.getElementById('orderAmount').classList.remove('shake'), 500);
-                alert('Please enter a valid order amount (greater than ₹0)');
-                return;
-            }
-            
-            if (!orderId.trim()) {
-                document.getElementById('orderId').classList.add('shake');
-                setTimeout(() => document.getElementById('orderId').classList.remove('shake'), 500);
-                alert('Please enter your Razorpay Order ID');
-                return;
-            }
-            
-            // Show loading
-            showLoading(true);
-            
-            // Simulate verification process
-            setTimeout(() => {
-                // Store PENDING order details (not verified)
-                pendingOrder = {
-                    amount: parseFloat(orderAmount).toFixed(2),
-                    orderId: orderId.trim(),
-                    submittedAt: new Date().toISOString(),
-                    status: "Pending Verification" // Explicitly set status as pending
-                };
-                
-                // Update UI with PENDING order info
-                document.getElementById('orderAmountBadge').textContent = `₹${pendingOrder.amount}`;
-                document.getElementById('orderStatusBadge').classList.remove('hidden');
-                document.getElementById('displayOrderAmount').textContent = `₹${pendingOrder.amount}`;
-                document.getElementById('displayOrderId').textContent = pendingOrder.orderId;
-                document.getElementById('pendingVerificationInfo').classList.remove('hidden');
-                document.getElementById('verifyAmount').textContent = pendingOrder.amount;
-                
-                // Hide modal and loading
-                hideOrderVerificationModal();
-                showLoading(false);
-                
-                // Update progress
-                updateProgressBar(2);
-                
-                // Enable address form
-                document.getElementById('addressForm').querySelectorAll('input, select, textarea').forEach(el => {
-                    el.disabled = false;
-                });
-            }, 2000);
-        }
-        
         // Initialize map
         function initMap(lat = primeSquareLocation[0], lng = primeSquareLocation[1]) {
             if (!map) {
@@ -823,42 +726,9 @@
                     iconAnchor: [17, 17]
                 });
                 
-                const taskusIcon = L.divIcon({
-                    className: 'custom-div-icon',
-                    html: '<div style="background-color: #ef4444; width: 35px; height: 35px; border-radius: 50%; border: 3px solid white; box-shadow: 0 3px 10px rgba(0,0,0,0.4); display: flex; align-items: center; justify-content: center;"><i class="fas fa-building" style="color: white; font-size: 14px;"></i></div>',
-                    iconSize: [35, 35],
-                    iconAnchor: [17, 17]
-                });
-                
-                const sapphireIcon = L.divIcon({
-                    className: 'custom-div-icon',
-                    html: '<div style="background-color: #10b981; width: 35px; height: 35px; border-radius: 50%; border: 3px solid white; box-shadow: 0 3px 10px rgba(0,0,0,0.4); display: flex; align-items: center; justify-content: center;"><i class="fas fa-gem" style="color: white; font-size: 14px;"></i></div>',
-                    iconSize: [35, 35],
-                    iconAnchor: [17, 17]
-                });
-                
-                const ligIcon = L.divIcon({
-                    className: 'custom-div-icon',
-                    html: '<div style="background-color: #f59e0b; width: 35px; height: 35px; border-radius: 50%; border: 3px solid white; box-shadow: 0 3px 10px rgba(0,0,0,0.4); display: flex; align-items: center; justify-content: center;"><i class="fas fa-square" style="color: white; font-size: 14px;"></i></div>',
-                    iconSize: [35, 35],
-                    iconAnchor: [17, 17]
-                });
-                
-                // Add reference markers with updated locations
+                // Add reference marker
                 L.marker(primeSquareLocation, {icon: primeIcon}).addTo(map)
-                    .bindPopup('<b>Prime Square, Omaxe City 1</b><br>📍 Delivery reference point<br>🎁 FREE Delivery if order > ₹199')
-                    .openPopup();
-                
-                L.marker(taskusLocation, {icon: taskusIcon}).addTo(map)
-                    .bindPopup('<b>Taskus, Indore</b><br>💰 Fixed charge: ₹20 + GST<br>📏 Within 2km radius')
-                    .openPopup();
-                
-                L.marker(brilliantSapphireLocation, {icon: sapphireIcon}).addTo(map)
-                    .bindPopup('<b>Brilliant Sapphire, Indore</b><br>💰 Fixed charge: ₹15 + GST<br>📏 Within 2km radius')
-                    .openPopup();
-                    
-                L.marker(ligSquareLocation, {icon: ligIcon}).addTo(map)
-                    .bindPopup('<b>LIG Square, Indore</b><br>📐 Charge: ₹3 per 500m + GST<br>🛣️ Prime Square to LIG Square route')
+                    .bindPopup('<b>Prime Square, Omaxe City 1</b><br>📍 EasyGo Restaurant<br>🎁 FREE Delivery if order > ₹199')
                     .openPopup();
                     
                 // Add a circle for 4km radius from Prime Square
@@ -868,6 +738,14 @@
                     fillOpacity: 0.15,
                     radius: 4000 // 4km in meters
                 }).addTo(map).bindPopup('4km FREE Delivery zone from Prime Square');
+                
+                // Add a circle for 10km delivery range
+                L.circle(primeSquareLocation, {
+                    color: '#f59e0b',
+                    fillColor: '#f59e0b',
+                    fillOpacity: 0.1,
+                    radius: 10000 // 10km in meters
+                }).addTo(map).bindPopup('Maximum Delivery Range (10km)');
             } else {
                 map.setView([lat, lng], 14);
             }
@@ -892,20 +770,27 @@
             let offerText = "";
             let showOffer = false;
             let freeDelivery = false;
+            let beyondRange = false;
             
-            // Check if order amount qualifies for free Delivery (order > ₹199)
-            const orderAmount = pendingOrder ? parseFloat(pendingOrder.amount) : 0;
-            const freeDeliveryEligible = orderAmount > 199;
+            // Check cart total
+            const cartTotal = parseFloat(localStorage.getItem('easygo-cart-total')) || 0;
+            const freeDeliveryEligible = cartTotal > 199;
             
-            // Calculate distances to other reference points
-            const distanceToTaskus = calculateDistance(userLocation.lat, userLocation.lng, taskusLocation[0], taskusLocation[1]);
-            const distanceToSapphire = calculateDistance(userLocation.lat, userLocation.lng, brilliantSapphireLocation[0], brilliantSapphireLocation[1]);
+            // Check if beyond delivery range (10km)
+            if (distance > 10) {
+                beyondRange = true;
+                return {
+                    beyondRange: true,
+                    distance: distance.toFixed(2),
+                    message: "Beyond 10km delivery range. Please select Takeaway."
+                };
+            }
             
             // ✅ ANSWER TO YOUR QUESTION: If within 4km AND order > ₹199 = FREE, else charged
             if (distance <= 4) {
                 if (freeDeliveryEligible) {
                     baseCharge = 0;
-                    offerText = "🎉 FREE DELIVERY! Your order value (₹" + orderAmount + ") exceeds ₹199";
+                    offerText = "🎉 FREE DELIVERY! Your order value (₹" + cartTotal + ") exceeds ₹199";
                     showOffer = true;
                     freeDelivery = true;
                 } else {
@@ -915,28 +800,13 @@
                     showOffer = true;
                 }
             } 
-            // Parameter 2: Taskus area (within 2km) - ₹20
-            else if (distanceToTaskus <= 2) {
-                baseCharge = 20;
-                offerText = "Delivery to Taskus area: Fixed ₹20 charge";
-            }
-            // Parameter 3: Brilliant Sapphire area (within 2km) - ₹15
-            else if (distanceToSapphire <= 2) {
-                baseCharge = 15;
-                offerText = "Delivery to Brilliant Sapphire area: Fixed ₹15 charge";
-            }
-            // Parameter 4: Prime Square to LIG Square route - ₹3 per 500m
-            // Only if beyond 4km from Prime Square
-            else if (distance > 4 && distance <= calculateDistance(primeSquareLocation[0], primeSquareLocation[1], ligSquareLocation[0], ligSquareLocation[1])) {
-                // ₹3 per 500m
-                const units = Math.ceil(distance * 2); // Convert km to 500m units
-                baseCharge = units * 3;
-                offerText = "₹3 per 500m charge applies for Prime Square to LIG Square route";
-            }
-            // Default: Beyond 4km but not in specific zones
-            else {
-                baseCharge = 199; // Exceed cost
-                offerText = "Beyond 4km from Prime Square: ₹199 charge applies";
+            // Between 4km and 10km
+            else if (distance <= 10) {
+                // ₹3 per km beyond 4km
+                const extraKm = distance - 4;
+                baseCharge = Math.ceil(4 * 2 + extraKm * 3);
+                offerText = "Beyond 4km: ₹3 per km applies";
+                showOffer = true;
             }
             
             // Apply GST
@@ -951,7 +821,8 @@
                 offerText: offerText,
                 showOffer: showOffer,
                 freeDelivery: freeDelivery,
-                savings: freeDelivery ? totalCharge : 0
+                savings: freeDelivery ? totalCharge : 0,
+                beyondRange: false
             };
         }
         
@@ -973,6 +844,20 @@
             // Calculate charges
             const charges = calculateDeliveryCharges(distance);
             
+            if (charges.beyondRange) {
+                // Show range warning
+                document.getElementById('rangeWarning').classList.remove('hidden');
+                document.getElementById('freeDeliveryOffer').classList.add('hidden');
+                document.getElementById('proceedToPaymentBtn').disabled = true;
+                document.getElementById('proceedToPaymentBtn').classList.add('opacity-50', 'cursor-not-allowed');
+                return;
+            }
+            
+            // Hide range warning
+            document.getElementById('rangeWarning').classList.add('hidden');
+            document.getElementById('proceedToPaymentBtn').disabled = false;
+            document.getElementById('proceedToPaymentBtn').classList.remove('opacity-50', 'cursor-not-allowed');
+            
             // Update UI
             document.getElementById('distanceValue').textContent = `${charges.distance} km`;
             document.getElementById('previewDistance').textContent = `${charges.distance} km`;
@@ -983,19 +868,11 @@
             
             // Show/hide free Delivery offer
             const freeDeliveryOffer = document.getElementById('freeDeliveryOffer');
-            const offerNote = document.getElementById('offerNote');
-            const offerText = document.getElementById('offerText');
             
             if (charges.freeDelivery) {
                 freeDeliveryOffer.classList.remove('hidden');
-                offerNote.classList.add('hidden');
-            } else if (charges.showOffer) {
-                freeDeliveryOffer.classList.add('hidden');
-                offerText.textContent = charges.offerText;
-                offerNote.classList.remove('hidden');
             } else {
                 freeDeliveryOffer.classList.add('hidden');
-                offerNote.classList.add('hidden');
             }
             
             // Generate location link
@@ -1009,6 +886,16 @@
             
             // Update progress
             updateProgressBar(3);
+            
+            // Save delivery data
+            const deliveryData = {
+                mode: 'delivery',
+                distance: charges.distance,
+                charge: charges.totalCharge,
+                location: userLocation,
+                locationLink: googleMapsLink
+            };
+            localStorage.setItem('easygo-delivery', JSON.stringify(deliveryData));
         }
         
         // Set user location on map
@@ -1023,7 +910,7 @@
             // Custom user marker
             const userIcon = L.divIcon({
                 className: 'custom-div-icon',
-                html: '<div style="background: linear-gradient(135deg, #8b5cf6, #3b82f6); width: 45px; height: 45px; border-radius: 50%; border: 4px solid white; box-shadow: 0 5px 15px rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center;"><i class="fas fa-user" style="color: white; font-size: 18px;"></i></div>',
+                html: '<div style="background: linear-gradient(135deg, #8b5cf6, #3b82f6); width: 45px; height: 45px; border-radius: 50%; border: 4px solid white; box-shadow: 0 5px 15px rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center;"><i class="fas fa-home" style="color: white; font-size: 18px;"></i></div>',
                 iconSize: [45, 45],
                 iconAnchor: [22, 22]
             });
@@ -1064,12 +951,6 @@
         
         // Get current location
         function getCurrentLocation() {
-            // Check if order is submitted
-            if (!pendingOrder) {
-                alert('⚠️ Please submit your order details first before checking location');
-                return;
-            }
-            
             // Check if form is filled
             if (!validateForm()) {
                 return;
@@ -1145,144 +1026,126 @@
                 return false;
             }
             
+            // Save address to localStorage
+            const address = {
+                name: document.getElementById('name').value,
+                phone: document.getElementById('phone').value,
+                addressType: document.getElementById('addressType').value,
+                houseNumber: document.getElementById('houseNumber').value,
+                floorNumber: document.getElementById('floorNumber').value,
+                locality: document.getElementById('locality').value,
+                street: document.getElementById('street').value,
+                pincode: document.getElementById('pincode').value,
+                city: document.getElementById('city').value,
+                state: document.getElementById('state').value,
+                specialRequest: document.getElementById('specialRequest').value
+            };
+            localStorage.setItem('easygo-address', JSON.stringify(address));
+            
             return true;
         }
         
-        // Send data to backend (WhatsApp/Server)
-        function sendOrderDetails(action) {
-            const name = document.getElementById('name').value;
-            const phone = document.getElementById('phone').value;
-            const addressType = document.getElementById('addressType').value;
-            const houseNumber = document.getElementById('houseNumber').value;
-            const floorNumber = document.getElementById('floorNumber').value;
-            const locality = document.getElementById('locality').value;
-            const street = document.getElementById('street').value;
-            const pincode = document.getElementById('pincode').value;
-            const city = document.getElementById('city').value;
-            const state = document.getElementById('state').value;
-            const specialRequest = document.getElementById('specialRequest').value;
+        // Switch to delivery mode
+        function switchToDelivery() {
+            deliveryMode = 'delivery';
+            document.getElementById('delivery-option').classList.add('border-blue-500', 'bg-blue-50');
+            document.getElementById('delivery-option').classList.remove('border-gray-200');
+            document.getElementById('takeaway-option').classList.add('border-gray-200');
+            document.getElementById('takeaway-option').classList.remove('border-green-500', 'bg-green-50');
             
-            const distance = document.getElementById('distanceValue').textContent;
-            const totalCharge = document.getElementById('totalCharge').textContent;
-            const baseFare = document.getElementById('baseFare').textContent;
+            document.getElementById('map-section').classList.remove('hidden');
+            document.getElementById('location-section').classList.remove('hidden');
+            document.getElementById('takeawaySummary').classList.add('hidden');
             
-            const orderDetails = {
-                action: action,
-                orderId: pendingOrder.orderId,
-                orderAmount: pendingOrder.amount,
-                customerName: name,
-                phone: phone,
-                address: `${houseNumber}, ${floorNumber}, ${street}, ${locality}, ${city}, ${state} - ${pincode}`,
-                addressType: addressType,
-                distance: distance,
-                baseFare: baseFare,
-                deliveryCharge: totalCharge,
-                specialRequest: specialRequest,
-                locationLink: googleMapsLink,
-                userLocation: userLocation,
-                status: "Pending Verification", // Always show as pending
-                timestamp: new Date().toLocaleString()
-            };
-            
-            // WhatsApp message format with location link
-            const message = `📦 EasyGo Order ${action}%0A%0A` +
-                `*Status:* PENDING VERIFICATION ⚠️%0A` +
-                `*Order ID:* ${orderDetails.orderId}%0A` +
-                `*Order Amount:* ₹${orderDetails.orderAmount}%0A` +
-                `*Customer:* ${orderDetails.customerName}%0A` +
-                `*Phone:* ${orderDetails.phone}%0A` +
-                `*Address:* ${orderDetails.address}%0A` +
-                `*Address Type:* ${orderDetails.addressType}%0A` +
-                `*Distance:* ${orderDetails.distance}%0A` +
-                `*Base Fare:* ${orderDetails.baseFare}%0A` +
-                `*Delivery Charge:* ${orderDetails.deliveryCharge}%0A` +
-                `*Special Request:* ${orderDetails.specialRequest || 'None'}%0A%0A` +
-                `📍 *Delivery Location Link:*%0A${orderDetails.locationLink}%0A%0A` +
-                `*Coordinates:* ${orderDetails.userLocation.lat.toFixed(6)}, ${orderDetails.userLocation.lng.toFixed(6)}%0A` +
-                `*Action:* ${action}%0A` +
-                `*Time:* ${orderDetails.timestamp}`;
-            
-            // Open WhatsApp with pre-filled message
-            window.open(`https://wa.me/917651837322?text=${message}`, '_blank');
+            // Initialize map if not already
+            if (!map) {
+                initMap();
+            }
         }
         
-        // Reset form for new order
-        function resetForm() {
-            document.getElementById('resultMessage').classList.add('hidden');
-            document.getElementById('successMessage').classList.add('hidden');
-            document.getElementById('deniedMessage').classList.add('hidden');
+        // Switch to takeaway mode
+        function switchToTakeaway() {
+            deliveryMode = 'takeaway';
+            document.getElementById('takeaway-option').classList.add('border-green-500', 'bg-green-50');
+            document.getElementById('takeaway-option').classList.remove('border-gray-200');
+            document.getElementById('delivery-option').classList.add('border-gray-200');
+            document.getElementById('delivery-option').classList.remove('border-blue-500', 'bg-blue-50');
+            
+            document.getElementById('map-section').classList.add('hidden');
+            document.getElementById('location-section').classList.add('hidden');
             document.getElementById('deliveryChargesCard').classList.add('hidden');
-            document.getElementById('locationStatus').classList.add('hidden');
-            document.getElementById('locationLinkContainer').classList.add('hidden');
-            document.getElementById('orderStatusBadge').classList.add('hidden');
-            document.getElementById('pendingVerificationInfo').classList.add('hidden');
-            document.getElementById('freeDeliveryOffer').classList.add('hidden');
-            document.getElementById('offerNote').classList.add('hidden');
+            document.getElementById('takeawaySummary').classList.remove('hidden');
             
-            // Clear form
-            document.getElementById('name').value = '';
-            document.getElementById('phone').value = '';
-            document.getElementById('addressType').value = '';
-            document.getElementById('houseNumber').value = '';
-            document.getElementById('floorNumber').value = '';
-            document.getElementById('locality').value = '';
-            document.getElementById('street').value = '';
-            document.getElementById('pincode').value = '';
-            document.getElementById('city').value = '';
-            document.getElementById('state').value = '';
-            document.getElementById('specialRequest').value = '';
+            // Save takeaway data
+            const takeawayData = {
+                mode: 'takeaway',
+                pickupLocation: 'Prime Square, Omaxe City 1, Indore',
+                timings: '6:00 PM - 10:00 PM'
+            };
+            localStorage.setItem('easygo-delivery', JSON.stringify(takeawayData));
+        }
+        
+        // Load cart summary
+        function loadCartSummary() {
+            const cart = JSON.parse(localStorage.getItem('easygo-cart')) || [];
+            const cartTotal = localStorage.getItem('easygo-cart-total') || '0';
             
-            // Disable form until order verification
-            document.getElementById('addressForm').querySelectorAll('input, select, textarea').forEach(el => {
-                el.disabled = true;
-            });
-            
-            // Reset map
-            initMap();
-            
-            // Remove user marker
-            if (userMarker) {
-                map.removeLayer(userMarker);
-                userMarker = null;
-                userLocation = null;
+            if (cart.length > 0) {
+                document.getElementById('cart-summary-badge').classList.remove('hidden');
+                document.getElementById('cart-items-count').textContent = `${cart.length} items`;
+                document.getElementById('cart-total-badge').textContent = `₹${cartTotal}`;
             }
-            
-            // Reset progress
-            updateProgressBar(1);
-            
-            // Show verification modal again
-            pendingOrder = null;
-            setTimeout(() => {
-                showOrderVerificationModal();
-            }, 500);
         }
         
         // Event Listeners
         document.addEventListener('DOMContentLoaded', function() {
-            // Show order verification modal on page load
-            setTimeout(() => {
-                showOrderVerificationModal();
-            }, 800);
-            
             // Initialize map
             initMap();
             
-            // Disable address form until order verification
-            document.getElementById('addressForm').querySelectorAll('input, select, textarea').forEach(el => {
-                el.disabled = true;
-            });
+            // Load cart summary
+            loadCartSummary();
             
-            // Order verification modal buttons
-            document.getElementById('verifyOrderBtn').addEventListener('click', verifyOrder);
-            document.getElementById('cancelVerificationBtn').addEventListener('click', function() {
-                if (confirm('Are you sure you want to cancel? You need to submit your order details to proceed.')) {
-                    hideOrderVerificationModal();
+            // Update progress
+            updateProgressBar(2);
+            
+            // Pincode lookup
+            document.getElementById('pincode').addEventListener('input', function() {
+                const pincode = this.value;
+                if (pincode.length === 6 && pincodeData[pincode]) {
+                    document.getElementById('city').value = pincodeData[pincode].city;
+                    document.getElementById('state').value = pincodeData[pincode].state;
+                } else if (pincode.length === 6) {
+                    // For demo purposes, set to Indore if pincode not in data
+                    document.getElementById('city').value = "Indore";
+                    document.getElementById('state').value = "Madhya Pradesh";
                 }
             });
             
-            // Edit order button
-            document.getElementById('editOrderBtn').addEventListener('click', function() {
-                showOrderVerificationModal();
+            // Delivery mode selection
+            document.getElementById('delivery-option').addEventListener('click', switchToDelivery);
+            document.getElementById('takeaway-option').addEventListener('click', switchToTakeaway);
+            
+            // Get location button
+            document.getElementById('getLocationBtn').addEventListener('click', function() {
+                getCurrentLocation();
+            });
+            
+            // Use current location button
+            document.getElementById('useCurrentLocationBtn').addEventListener('click', getCurrentLocation);
+            
+            // Manual location button
+            document.getElementById('manualLocationBtn').addEventListener('click', function() {
+                // Check if form is filled
+                if (!validateForm()) {
+                    return;
+                }
+                
+                alert('🗺️ Click on the map to drop a pin at your location. You can drag the pin to adjust.');
+                
+                // Set up map click listener
+                map.once('click', function(e) {
+                    setUserLocation(e.latlng.lat, e.latlng.lng);
+                });
             });
             
             // Copy location link
@@ -1306,84 +1169,31 @@
                 });
             });
             
-            // Pincode lookup
-            document.getElementById('pincode').addEventListener('input', function() {
-                const pincode = this.value;
-                if (pincode.length === 6 && pincodeData[pincode]) {
-                    document.getElementById('city').value = pincodeData[pincode].city;
-                    document.getElementById('state').value = pincodeData[pincode].state;
-                } else if (pincode.length === 6) {
-                    // For demo purposes, set to Indore if pincode not in data
-                    document.getElementById('city').value = "Indore";
-                    document.getElementById('state').value = "Madhya Pradesh";
-                }
-            });
-            
-            // Get location button
-            document.getElementById('getLocationBtn').addEventListener('click', function() {
-                getCurrentLocation();
-            });
-            
-            // Use current location button
-            document.getElementById('useCurrentLocationBtn').addEventListener('click', getCurrentLocation);
-            
-            // Manual location button
-            document.getElementById('manualLocationBtn').addEventListener('click', function() {
-                // Check if order is submitted
-                if (!pendingOrder) {
-                    alert('⚠️ Please submit your order details first before setting location');
-                    return;
-                }
-                
-                // Check if form is filled
+            // Proceed to payment (delivery)
+            document.getElementById('proceedToPaymentBtn').addEventListener('click', function() {
                 if (!validateForm()) {
                     return;
                 }
                 
-                alert('🗺️ Click on the map to drop a pin at your location. You can drag the pin to adjust.');
-                
-                // Set up map click listener
-                map.once('click', function(e) {
-                    setUserLocation(e.latlng.lat, e.latlng.lng);
-                });
-            });
-            
-            // Approve button
-            document.getElementById('approveBtn').addEventListener('click', function() {
-                if (!pendingOrder) {
-                    alert('⚠️ Please submit your order details first');
-                    return;
-                }
-                
-                if (!userLocation) {
+                if (deliveryMode === 'delivery' && !userLocation) {
                     alert('📍 Please set your location first');
                     return;
                 }
                 
-                document.getElementById('resultMessage').classList.remove('hidden');
-                document.getElementById('successMessage').classList.remove('hidden');
-                sendOrderDetails('✅ ORDER SUBMITTED - Pending Verification');
+                window.location.href = 'https://clean-scripts.github.io/Easygo-Payment/';
             });
             
-            // Deny button
-            document.getElementById('denyBtn').addEventListener('click', function() {
-                if (!pendingOrder) {
-                    alert('⚠️ Please submit your order details first');
+            // Proceed to payment (takeaway)
+            document.getElementById('proceedToPaymentTakeawayBtn').addEventListener('click', function() {
+                if (!validateForm()) {
                     return;
                 }
                 
-                document.getElementById('resultMessage').classList.remove('hidden');
-                document.getElementById('deniedMessage').classList.remove('hidden');
-                sendOrderDetails('❌ ORDER CANCELLED - Refund Requested');
+                window.location.href = 'https://clean-scripts.github.io/Easygo-Payment/';
             });
             
-            // New order button - REDIRECT TO MENU
-            document.getElementById('newOrderBtn').addEventListener('click', () => {
-                window.location.href = "https://clean-scripts.github.io/Easygo-Menu/";
-            });
-            
-            // Try again button
-            document.getElementById('tryAgainBtn').addEventListener('click', resetForm);
+            // Switch to delivery
+            document.getElementById('switchToDeliveryBtn').addEventListener('click', switchToDelivery);
             
             // Form validation styling
             const formInputs = document.querySelectorAll('#addressForm input, #addressForm select, #addressForm textarea');
@@ -1402,6 +1212,9 @@
                     }
                 });
             });
+            
+            // Default to delivery mode
+            switchToDelivery();
         });
     </script>
 </body>
