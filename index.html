@@ -171,6 +171,185 @@
                 </div>
             </header>
 
+
+<!-- In the address form section, update this part: -->
+
+<!-- Delivery Mode Selection -->
+<div class="mt-8">
+    <h3 class="text-xl font-bold mb-4">Select Delivery Mode</h3>
+    <div class="grid grid-cols-2 gap-4">
+        <div id="delivery-option" class="border-2 border-blue-200 bg-blue-50 rounded-xl p-4 cursor-pointer"
+             onclick="switchToDelivery()">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 bg-blue-500 rounded-full flex items-center justify-center">
+                    <i class="fas fa-motorcycle text-white"></i>
+                </div>
+                <div>
+                    <p class="font-bold">Home Delivery</p>
+                    <p class="text-sm text-blue-600">Delivered to your address</p>
+                </div>
+            </div>
+        </div>
+        <div id="takeaway-option" class="border-2 border-green-500 bg-green-50 rounded-xl p-4 cursor-pointer"
+             onclick="switchToTakeaway()">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 bg-green-500 rounded-full flex items-center justify-center">
+                    <i class="fas fa-store text-white"></i>
+                </div>
+                <div>
+                    <p class="font-bold">Takeaway</p>
+                    <p class="text-sm text-green-600">Pickup from Prime Square</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Takeaway Info (Shown when takeaway selected) -->
+<div id="takeaway-info" class="hidden mt-6 p-5 bg-green-50 border-2 border-green-200 rounded-xl">
+    <div class="flex items-start gap-3">
+        <i class="fas fa-info-circle text-green-500 text-xl mt-1"></i>
+        <div>
+            <h4 class="font-bold text-green-800 mb-2">Takeaway Information</h4>
+            <p class="text-green-700">
+                <strong>Pickup Address:</strong> Prime Square, Omaxe City 1, Indore<br>
+                <strong>Timings:</strong> 6:00 PM - 10:00 PM<br>
+                <strong>Note:</strong> Please bring your OTP for verification at pickup
+            </p>
+        </div>
+    </div>
+</div>
+
+<!-- Address Form (Hidden when takeaway selected) -->
+<div id="address-form-section">
+    <!-- Your existing address form fields here -->
+</div>
+
+<script>
+// Add these functions
+function switchToDelivery() {
+    deliveryMode = 'delivery';
+    document.getElementById('delivery-option').classList.add('border-blue-500', 'bg-blue-50');
+    document.getElementById('delivery-option').classList.remove('border-gray-200');
+    document.getElementById('takeaway-option').classList.add('border-gray-200');
+    document.getElementById('takeaway-option').classList.remove('border-green-500', 'bg-green-50');
+    
+    document.getElementById('takeaway-info').classList.add('hidden');
+    document.getElementById('address-form-section').classList.remove('hidden');
+    document.getElementById('map-section').classList.remove('hidden');
+    document.getElementById('location-section').classList.remove('hidden');
+    
+    // Initialize map if not already
+    if (!map) {
+        initMap();
+    }
+}
+
+function switchToTakeaway() {
+    deliveryMode = 'takeaway';
+    document.getElementById('takeaway-option').classList.add('border-green-500', 'bg-green-50');
+    document.getElementById('takeaway-option').classList.remove('border-gray-200');
+    document.getElementById('delivery-option').classList.add('border-gray-200');
+    document.getElementById('delivery-option').classList.remove('border-blue-500', 'bg-blue-50');
+    
+    document.getElementById('takeaway-info').classList.remove('hidden');
+    document.getElementById('address-form-section').classList.add('hidden');
+    document.getElementById('map-section').classList.add('hidden');
+    document.getElementById('location-section').classList.add('hidden');
+    document.getElementById('deliveryChargesCard').classList.add('hidden');
+    document.getElementById('takeawaySummary').classList.remove('hidden');
+    
+    // Auto-fill restaurant address for takeaway
+    document.getElementById('locality').value = 'Prime Square';
+    document.getElementById('street').value = 'Omaxe City 1';
+    document.getElementById('city').value = 'Indore';
+    document.getElementById('state').value = 'Madhya Pradesh';
+    document.getElementById('pincode').value = '452001';
+    
+    // Save takeaway data
+    const takeawayData = {
+        mode: 'takeaway',
+        pickupLocation: 'Prime Square, Omaxe City 1, Indore',
+        timings: '6:00 PM - 10:00 PM',
+        charge: 0
+    };
+    localStorage.setItem('easygo-delivery', JSON.stringify(takeawayData));
+}
+
+// Update form validation for takeaway
+function validateForm() {
+    const requiredFields = ['name', 'phone'];
+    
+    // For delivery, add address fields
+    if (deliveryMode === 'delivery') {
+        requiredFields.push('addressType', 'houseNumber', 'locality', 'street', 'pincode');
+    }
+    
+    let isValid = true;
+    
+    requiredFields.forEach(fieldId => {
+        const field = document.getElementById(fieldId);
+        if (!field.value.trim()) {
+            field.classList.add('shake', 'border-red-500');
+            setTimeout(() => field.classList.remove('shake'), 500);
+            isValid = false;
+            
+            // Scroll to first error
+            if (isValid === false) {
+                field.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+        } else {
+            field.classList.remove('border-red-500');
+        }
+    });
+    
+    if (!isValid) {
+        alert('❌ Please fill in all required fields (marked with *)');
+        return false;
+    }
+    
+    // Validate phone number
+    const phone = document.getElementById('phone').value;
+    if (!/^\d{10}$/.test(phone)) {
+        document.getElementById('phone').classList.add('shake', 'border-red-500');
+        setTimeout(() => document.getElementById('phone').classList.remove('shake'), 500);
+        alert('❌ Please enter a valid 10-digit phone number.');
+        return false;
+    }
+    
+    // For delivery, validate pincode
+    if (deliveryMode === 'delivery') {
+        const pincode = document.getElementById('pincode').value;
+        if (!/^\d{6}$/.test(pincode)) {
+            document.getElementById('pincode').classList.add('shake', 'border-red-500');
+            setTimeout(() => document.getElementById('pincode').classList.remove('shake'), 500);
+            alert('❌ Please enter a valid 6-digit pincode.');
+            return false;
+        }
+    }
+    
+    // Save address to localStorage
+    const address = {
+        name: document.getElementById('name').value,
+        phone: document.getElementById('phone').value,
+        addressType: deliveryMode === 'delivery' ? document.getElementById('addressType').value : 'Takeaway',
+        houseNumber: deliveryMode === 'delivery' ? document.getElementById('houseNumber').value : 'N/A',
+        floorNumber: deliveryMode === 'delivery' ? document.getElementById('floorNumber').value : 'N/A',
+        locality: deliveryMode === 'delivery' ? document.getElementById('locality').value : 'Prime Square',
+        street: deliveryMode === 'delivery' ? document.getElementById('street').value : 'Omaxe City 1',
+        pincode: deliveryMode === 'delivery' ? document.getElementById('pincode').value : '452001',
+        city: deliveryMode === 'delivery' ? document.getElementById('city').value : 'Indore',
+        state: deliveryMode === 'delivery' ? document.getElementById('state').value : 'Madhya Pradesh',
+        specialRequest: document.getElementById('specialRequest').value,
+        deliveryMode: deliveryMode
+    };
+    localStorage.setItem('easygo-address', JSON.stringify(address));
+    
+    return true;
+}
+</script>
+
+            
             <div class="flex flex-col lg:flex-row gap-8">
                 <!-- Left Column: Address Form -->
                 <div class="lg:w-1/2">
