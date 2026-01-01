@@ -81,6 +81,16 @@
             stroke-dasharray: 10, 10;
             fill: rgba(239, 68, 68, 0.1);
         }
+        
+        /* Special location styling */
+        .special-location-marker {
+            background: #8b5cf6;
+            color: white;
+            border-radius: 50%;
+            padding: 8px;
+            text-align: center;
+            font-weight: bold;
+        }
     </style>
 </head>
 <body class="antialiased flex flex-col min-h-screen">
@@ -577,6 +587,17 @@
                                 </div>
                             </div>
                             
+                            <!-- Special Request Message -->
+                            <div id="specialRequestMessage" class="p-5 bg-purple-50 border-2 border-purple-200 rounded-2xl hidden">
+                                <div class="flex items-center gap-4">
+                                    <i class="fas fa-star text-purple-500 text-2xl"></i>
+                                    <div>
+                                        <p class="font-black text-purple-800 text-lg uppercase">✨ Special Delivery Request</p>
+                                        <p class="text-sm text-purple-700 font-medium" id="specialRequestText"></p>
+                                    </div>
+                                </div>
+                            </div>
+                            
                             <!-- Out of Service Area Message -->
                             <div id="outOfServiceAreaMessage" class="p-5 bg-red-50 border-2 border-red-200 rounded-2xl hidden">
                                 <div class="flex items-center gap-4">
@@ -713,19 +734,30 @@
             name: "TaskUs Indore - Rangreza",
             coords: [22.7500367, 75.9021075],
             distance: 1, // km
-            charge: 20 // ₹20 for orders > ₹199
+            charge: 20, // ₹20 for orders > ₹199
+            isSpecial: false
         },
         {
             name: "Teleperformance Brilliant Sapphire",
             coords: [22.7633039, 75.8814454],
             distance: 1, // km
-            charge: 20 // ₹20 for orders > ₹199
+            charge: 20, // ₹20 for orders > ₹199
+            isSpecial: false
         },
         {
             name: "L.I.G. Square",
             coords: [22.7336871, 75.8875409],
             distance: 1, // km
-            charge: 30 // ₹30 for orders > ₹199
+            charge: 30, // ₹30 for orders > ₹199
+            isSpecial: false
+        },
+        {
+            name: "Shree Vilas Palace (SPECIAL REQUEST)",
+            coords: [22.737, 75.895], // Approximate location in Indore
+            distance: 14, // km
+            charge: 40, // ₹40 for orders > ₹199
+            isSpecial: true,
+            specialMessage: "Special delivery available for orders above ₹199 with ₹40 delivery charge"
         }
     ];
     
@@ -752,11 +784,11 @@
         // 2. Load cart total
         loadCartTotal();
         
-        // 3. Initialize map after delay
+        // 3. Initialize map immediately
+        console.log("Initializing map...");
         setTimeout(() => {
-            console.log("Initializing map...");
             initMap();
-        }, 300);
+        }, 100);
         
         // 4. Set default mode
         switchToDelivery();
@@ -884,8 +916,8 @@
                 
                 console.log("Auto-filled address from geocoding");
                 
-                // Check if location is in Indore
-                checkServiceArea(lat, lng);
+                // Check if location matches any special location
+                checkSpecialLocation(lat, lng);
             }
             
             document.getElementById('loadingOverlay').classList.add('hidden');
@@ -893,6 +925,23 @@
         } catch (error) {
             console.error("Reverse geocoding error:", error);
             document.getElementById('loadingOverlay').classList.add('hidden');
+        }
+    }
+    
+    // ====== CHECK SPECIAL LOCATION ======
+    function checkSpecialLocation(lat, lng) {
+        // Check if location is close to any special location
+        for (const location of specialLocations) {
+            const distance = calculateDistance(lat, lng, location.coords[0], location.coords[1]);
+            
+            // If within 0.5km of a special location
+            if (distance < 0.5) {
+                if (location.isSpecial) {
+                    document.getElementById('specialRequestText').textContent = location.specialMessage;
+                    document.getElementById('specialRequestMessage').classList.remove('hidden');
+                }
+                break;
+            }
         }
     }
     
@@ -946,40 +995,6 @@
         return inside;
     }
     
-    // ====== PINCODE LOOKUP ======
-    async function lookupPincode(pincode) {
-        if (!/^\d{6}$/.test(pincode)) {
-            return null;
-        }
-        
-        try {
-            document.getElementById('loadingOverlay').classList.remove('hidden');
-            
-            // Try with PostOffice API for Indian pincodes
-            const response = await fetch(`https://api.postalpincode.in/pincode/${pincode}`);
-            
-            if (response.ok) {
-                const data = await response.json();
-                if (data[0].Status === "Success") {
-                    const postOffice = data[0].PostOffice[0];
-                    const city = postOffice.District || postOffice.Circle || '';
-                    const state = postOffice.State || '';
-                    
-                    document.getElementById('loadingOverlay').classList.add('hidden');
-                    return { city, state };
-                }
-            }
-            
-            document.getElementById('loadingOverlay').classList.add('hidden');
-            return null;
-            
-        } catch (error) {
-            console.error("Pincode lookup error:", error);
-            document.getElementById('loadingOverlay').classList.add('hidden');
-            return null;
-        }
-    }
-    
     // ====== SETUP EVENT LISTENERS ======
     function setupEventListeners() {
         console.log("Setting up event listeners...");
@@ -992,18 +1007,8 @@
             
             pincodeTimeout = setTimeout(async () => {
                 if (pincode.length === 6 && /^\d{6}$/.test(pincode)) {
-                    const location = await lookupPincode(pincode);
-                    if (location) {
-                        document.getElementById('city').value = location.city;
-                        document.getElementById('state').value = location.state;
-                        
-                        // Show service area warning
-                        document.getElementById('serviceAreaWarning').classList.remove('hidden');
-                    } else {
-                        // Clear fields if pincode not found
-                        document.getElementById('city').value = '';
-                        document.getElementById('state').value = '';
-                    }
+                    // Show service area warning
+                    document.getElementById('serviceAreaWarning').classList.remove('hidden');
                 }
             }, 800);
         });
@@ -1118,37 +1123,58 @@
     }
     
     // ====== INITIALIZE MAP ======
-    function initMap(lat = primeSquareLocation[0], lng = primeSquareLocation[1]) {
+    function initMap() {
         try {
-            console.log("Initializing map at:", lat, lng);
+            console.log("Initializing map...");
             
             const mapContainer = document.getElementById('map');
             if (!mapContainer) {
                 console.error("Map container not found!");
+                setTimeout(initMap, 500); // Retry after 500ms
+                return;
+            }
+            
+            // Check if Leaflet is loaded
+            if (typeof L === 'undefined') {
+                console.error("Leaflet library not loaded!");
+                setTimeout(initMap, 500); // Retry after 500ms
                 return;
             }
             
             // Clear existing map
             if (map) {
-                map.remove();
+                try {
+                    map.remove();
+                } catch (e) {
+                    console.log("Error removing old map:", e);
+                }
                 map = null;
             }
             
-            // Set explicit dimensions
-            mapContainer.style.height = '400px';
-            mapContainer.style.width = '100%';
-            
             // Initialize map centered on Indore
-            map = L.map('map').setView([22.72, 75.86], 12);
+            map = L.map('map', {
+                center: [22.72, 75.86],
+                zoom: 12,
+                zoomControl: true,
+                scrollWheelZoom: true
+            });
             
             // Add tile layer
             L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
                 attribution: '© OpenStreetMap contributors',
-                maxZoom: 19
+                maxZoom: 19,
+                minZoom: 10
             }).addTo(map);
             
             // Add restaurant marker
-            L.marker(primeSquareLocation).addTo(map)
+            L.marker(primeSquareLocation, {
+                icon: L.divIcon({
+                    className: 'restaurant-marker',
+                    html: '<div class="bg-indigo-600 text-white p-3 rounded-full shadow-lg">🏪</div>',
+                    iconSize: [40, 40],
+                    iconAnchor: [20, 40]
+                })
+            }).addTo(map)
                 .bindPopup('<b>Prime Square, EasyGo Restaurant</b><br>📍 Our Kitchen<br>📍 Indore, Madhya Pradesh')
                 .openPopup();
             
@@ -1180,13 +1206,15 @@
             
             // Add special location markers
             specialLocations.forEach(location => {
-                const color = '#3b82f6';
+                const color = location.isSpecial ? '#8b5cf6' : '#3b82f6';
+                const iconClass = location.isSpecial ? 'special-location-marker' : 'regular-location-marker';
+                
                 L.circleMarker(location.coords, {
                     color: color,
                     fillColor: color,
                     fillOpacity: 0.7,
                     radius: 8
-                }).addTo(map).bindPopup(`<b>${location.name}</b><br>Distance: ${location.distance}km<br>Charge: ₹${location.charge} (for orders > ₹199)`);
+                }).addTo(map).bindPopup(`<b>${location.name}</b><br>Distance: ${location.distance}km<br>Delivery Charge: ₹${location.charge} (for orders > ₹199)<br>${location.isSpecial ? '<strong>Special Request Available</strong>' : ''}`);
             });
             
             // Add click event for manual pin drop with warning
@@ -1208,13 +1236,13 @@
                 }
             });
             
-            // Force map resize
+            // Force map resize after initialization
             setTimeout(() => {
                 if (map) {
                     map.invalidateSize();
-                    console.log("Map invalidated size");
+                    console.log("Map invalidated size successfully");
                 }
-            }, 500);
+            }, 300);
             
             console.log("Map initialized successfully");
             
@@ -1354,6 +1382,29 @@
             return { beyondRange: true, distance: distance.toFixed(2) };
         }
         
+        // Special case for Shree Vilas Palace (14km)
+        if (distance >= 13.5 && distance <= 14.5) {
+            console.log("Special location detected: Shree Vilas Palace area");
+            let baseCharge = 40; // ₹40 for orders > ₹199
+            
+            if (freeDeliveryEligible) {
+                baseCharge = 40; // Still ₹40 even for orders above ₹199 for this special location
+            }
+            
+            const gst = baseCharge * 0.18;
+            const totalCharge = baseCharge + gst;
+            
+            return {
+                distance: "14.0",
+                baseCharge: baseCharge,
+                gst: gst.toFixed(2),
+                totalCharge: totalCharge.toFixed(2),
+                freeDelivery: false,
+                beyondRange: false,
+                specialLocation: true
+            };
+        }
+        
         // Beyond 10km from restaurant
         if (distance > 10) {
             console.log("Distance > 10km from restaurant");
@@ -1392,7 +1443,8 @@
             gst: gst.toFixed(2),
             totalCharge: totalCharge.toFixed(2),
             freeDelivery: freeDeliveryEligible && baseCharge === 0,
-            beyondRange: false
+            beyondRange: false,
+            specialLocation: false
         };
     }
     
@@ -1424,6 +1476,7 @@
             document.getElementById('outOfServiceAreaMessage').classList.remove('hidden');
             document.getElementById('serviceAreaMessage').classList.add('hidden');
             document.getElementById('freeDeliveryOffer').classList.add('hidden');
+            document.getElementById('specialRequestMessage').classList.add('hidden');
             document.getElementById('serviceExpansionMessage').classList.remove('hidden');
             document.getElementById('proceedToPaymentBtn').disabled = true;
             document.getElementById('proceedToPaymentBtn').classList.add('opacity-50', 'cursor-not-allowed');
@@ -1436,6 +1489,14 @@
         document.getElementById('serviceExpansionMessage').classList.add('hidden');
         document.getElementById('proceedToPaymentBtn').disabled = false;
         document.getElementById('proceedToPaymentBtn').classList.remove('opacity-50', 'cursor-not-allowed');
+        
+        // Show special request message for Shree Vilas Palace
+        if (charges.specialLocation) {
+            document.getElementById('specialRequestText').textContent = "Special delivery available for orders above ₹199 with ₹40 delivery charge";
+            document.getElementById('specialRequestMessage').classList.remove('hidden');
+        } else {
+            document.getElementById('specialRequestMessage').classList.add('hidden');
+        }
         
         // Update UI
         document.getElementById('distanceValue').textContent = `${charges.distance} km`;
@@ -1463,7 +1524,8 @@
             distance: charges.distance,
             charge: charges.totalCharge,
             location: userLocation,
-            locationLink: googleMapsLink
+            locationLink: googleMapsLink,
+            isSpecialLocation: charges.specialLocation || false
         };
         localStorage.setItem('easygo-delivery', JSON.stringify(deliveryData));
         
@@ -1601,7 +1663,7 @@
         // Show service area warning
         document.getElementById('serviceAreaWarning').classList.remove('hidden');
         
-        // Ensure map is visible
+        // Ensure map is visible and properly initialized
         setTimeout(() => {
             if (map) {
                 map.invalidateSize();
@@ -1609,7 +1671,7 @@
             } else {
                 initMap();
             }
-        }, 300);
+        }, 100);
     }
     
     // ====== SWITCH TO TAKEAWAY MODE ======
