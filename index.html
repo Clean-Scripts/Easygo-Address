@@ -3,102 +3,39 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>EasyGo | Address & Delivery</title>
-    <!-- Favicon -->
-    <link rel="icon" type="image/x-icon" href="https://raw.githubusercontent.com/Clean-Scripts/EasyGo-Address/refs/heads/main/logo.png">
+    <title>Easy Go | Address & Delivery</title>
+    <link rel="icon" type="image/png" href="https://raw.githubusercontent.com/Clean-Scripts/EasyGo-Expense-Tracker/refs/heads/main/logo.png">
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <style>
-        /* Banner Background */
-        .banner-bg {
-            background-image: url('https://raw.githubusercontent.com/Clean-Scripts/EasyGo-Address/refs/heads/main/Banner.png');
-            background-size: cover;
-            background-position: center;
-            background-repeat: no-repeat;
-            min-height: 100vh;
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap');
+        body { font-family: 'Inter', sans-serif; background: #ffffff; color: #1a1a1a; min-height: 100vh; }
+        .banner-clip { clip-path: polygon(0 0, 100% 0, 100% 85%, 0 100%); }
+        
+        /* Map container */
+        #map { 
+            height: 400px; 
+            width: 100%; 
+            border-radius: 1.5rem; 
+            overflow: hidden;
+            border: 2px solid #f3f4f6;
         }
         
-        /* Overlay for better readability */
-        .content-overlay {
-            background: rgba(0, 0, 0, 0.7);
-            min-height: 100vh;
-        }
-        
-        /* Card styles */
+        /* Glass effect */
         .glass-card {
             background: rgba(255, 255, 255, 0.95);
             backdrop-filter: blur(10px);
             border: 1px solid rgba(255, 255, 255, 0.2);
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-        }
-        
-        /* Map container - FIXED STYLE */
-        #map {
-            height: 400px;
-            width: 100%;
-            border-radius: 1rem;
-            overflow: hidden;
-            z-index: 1;
-        }
-        
-        /* Floating labels */
-        .floating-label-group {
-            position: relative;
-            margin-bottom: 1.5rem;
-        }
-        
-        .floating-label {
-            position: absolute;
-            top: -0.75rem;
-            left: 0.75rem;
-            font-size: 0.75rem;
-            color: #3b82f6;
-            background: white;
-            padding: 0 0.5rem;
-            z-index: 10;
-            transition: all 0.2s ease;
-            opacity: 0;
-        }
-        
-        .floating-input:focus ~ .floating-label,
-        .floating-input:not(:placeholder-shown) ~ .floating-label {
-            opacity: 1;
-        }
-        
-        /* Step indicators */
-        .step-indicator {
-            width: 2rem;
-            height: 2rem;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: bold;
-            margin-right: 0.5rem;
-        }
-        
-        .step-completed {
-            background: linear-gradient(135deg, #10b981, #059669);
-            color: white;
-        }
-        
-        .step-active {
-            background: linear-gradient(135deg, #3b82f6, #1d4ed8);
-            color: white;
-        }
-        
-        .step-inactive {
-            background-color: #e5e7eb;
-            color: #6b7280;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.05);
         }
         
         /* Progress bar */
-        .progress-bar {
-            height: 0.375rem;
-            border-radius: 0.25rem;
+        .progress-container {
+            height: 6px;
             background: #e5e7eb;
+            border-radius: 3px;
             overflow: hidden;
         }
         
@@ -108,45 +45,22 @@
             transition: width 0.5s ease;
         }
         
-        /* Button animations */
-        .btn-pulse {
-            animation: pulse 2s infinite;
+        /* Custom animations */
+        @keyframes pulse-gentle {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.02); }
         }
         
-        @keyframes pulse {
-            0% {
-                box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.4);
-            }
-            70% {
-                box-shadow: 0 0 0 10px rgba(59, 130, 246, 0);
-            }
-            100% {
-                box-shadow: 0 0 0 0 rgba(59, 130, 246, 0);
-            }
+        .pulse-gentle {
+            animation: pulse-gentle 2s infinite;
         }
         
-        /* Shake animation for errors */
-        .shake {
-            animation: shake 0.5s;
-        }
-        
-        @keyframes shake {
-            0%, 100% { transform: translateX(0); }
-            10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
-            20%, 40%, 60%, 80% { transform: translateX(5px); }
-        }
-        
-        /* Empty cart overlay */
-        #emptyCartOverlay {
-            transition: all 0.3s ease;
-        }
-        
-        /* Loader animation */
+        /* Loading animation */
         .loader {
             width: 50px;
             height: 50px;
-            border: 5px solid #f3f3f3;
-            border-top: 5px solid #3b82f6;
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #3b82f6;
             border-radius: 50%;
             animation: spin 1s linear infinite;
         }
@@ -156,382 +70,383 @@
             100% { transform: rotate(360deg); }
         }
         
-        /* Custom marker for user location */
-        .custom-marker {
-            background: transparent !important;
-            border: none !important;
-        }
-        
-        /* Ensure map container has proper dimensions */
-        .leaflet-container {
-            height: 100%;
-            width: 100%;
-        }
+        /* Main content spacing */
+        .main-content { min-height: calc(100vh - 200px); }
+        footer { margin-top: auto; }
     </style>
 </head>
-<body class="banner-bg">
+<body class="antialiased flex flex-col min-h-screen">
     
     <!-- Empty Cart Overlay -->
-    <div id="emptyCartOverlay" class="fixed inset-0 bg-black bg-opacity-90 flex items-center justify-center z-50 hidden">
-        <div class="bg-white p-10 rounded-2xl shadow-2xl text-center max-w-md mx-4">
+    <div id="emptyCartOverlay" class="fixed inset-0 bg-black/90 backdrop-blur-sm hidden flex items-center justify-center z-50 p-4">
+        <div class="bg-white rounded-[2.5rem] p-10 max-w-md w-full shadow-2xl text-center border-2 border-gray-100">
             <div class="text-6xl mb-6">🛒</div>
-            <h2 class="text-2xl font-bold text-gray-800 mb-4">Your Cart is Empty</h2>
-            <p class="text-gray-600 mb-6">You need to add items to your cart before proceeding to address details.</p>
-            <p class="text-sm text-gray-500 mb-8">Redirecting to menu in <span id="countdown">5</span> seconds...</p>
+            <h2 class="text-2xl font-black uppercase mb-4">Your Cart is Empty</h2>
+            <p class="text-gray-600 mb-6 font-medium">Add delicious items to your cart before proceeding to address details.</p>
+            <p class="text-xs font-bold text-gray-500 uppercase tracking-widest mb-8">Redirecting in <span id="countdown" class="text-indigo-600 font-black">5</span> seconds...</p>
             <a href="https://clean-scripts.github.io/Easygo-Menu/" 
-               class="inline-flex items-center gap-3 px-8 py-4 bg-gradient-to-r from-blue-500 to-purple-600 text-white font-bold rounded-xl hover:opacity-90 transition">
+               class="inline-flex items-center gap-3 px-8 py-4 bg-indigo-600 text-white font-black uppercase rounded-[2rem] hover:bg-indigo-700 transition-all shadow-lg">
                 <i class="fas fa-shopping-cart"></i>
-                Go to Menu Now
+                Back to Menu
             </a>
         </div>
     </div>
     
-    <!-- Content Overlay -->
-    <div class="content-overlay">
-        <div class="max-w-7xl mx-auto px-4 py-8">
-            <!-- Header with Logo -->
-            <header class="mb-8">
-                <div class="flex flex-col md:flex-row items-center justify-between gap-6 mb-8">
-                    <!-- Logo -->
+    <!-- Loading Overlay -->
+    <div id="loadingOverlay" class="fixed inset-0 bg-black/70 backdrop-blur-sm hidden flex items-center justify-center z-40">
+        <div class="bg-white rounded-[2rem] p-10 shadow-2xl text-center border-2 border-gray-100">
+            <div class="loader mx-auto mb-6"></div>
+            <p class="text-xl font-black uppercase mb-2">Processing</p>
+            <p class="text-gray-600 text-sm font-medium">Please wait while we verify your details...</p>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content">
+        <!-- Header Banner -->
+        <header class="relative mb-8">
+            <div class="h-48 md:h-64 overflow-hidden banner-clip">
+                <img src="https://raw.githubusercontent.com/Clean-Scripts/EasyGo-Expense-Tracker/refs/heads/main/Banner.png" 
+                     class="w-full h-full object-cover" alt="Easy Go Banner">
+            </div>
+            <div class="absolute -bottom-6 left-0 right-0 flex justify-center">
+                <img src="https://raw.githubusercontent.com/Clean-Scripts/EasyGo-Expense-Tracker/refs/heads/main/logo.png" 
+                     class="h-32 w-32 rounded-full border-4 border-white shadow-xl bg-white p-1">
+            </div>
+        </header>
+
+        <!-- Main Container -->
+        <div class="max-w-6xl mx-auto px-4 pt-10 pb-12">
+            <!-- Page Title -->
+            <div class="text-center mb-10">
+                <h1 class="text-5xl font-black uppercase tracking-tighter mb-2">Address & Delivery</h1>
+                <p class="text-gray-500 uppercase text-sm font-bold tracking-widest">Step 2: Enter your details for fresh delivery</p>
+            </div>
+
+            <!-- Progress Steps -->
+            <div class="glass-card rounded-[2rem] p-8 mb-10 border-2 border-gray-100">
+                <div class="flex items-center justify-between mb-6">
                     <div class="flex items-center gap-4">
-                        <div class="w-20 h-20 bg-gradient-to-r from-blue-500 to-purple-600 rounded-2xl flex items-center justify-center shadow-xl">
-                            <img src="https://raw.githubusercontent.com/Clean-Scripts/EasyGo-Address/refs/heads/main/logo.png" 
-                                 alt="EasyGo Logo" 
-                                 class="w-14 h-14 object-contain">
+                        <div class="w-12 h-12 bg-green-500 rounded-2xl flex items-center justify-center shadow-lg">
+                            <i class="fas fa-check text-white text-lg"></i>
                         </div>
                         <div>
-                            <h1 class="text-3xl md:text-4xl font-bold text-white">EasyGo Address</h1>
-                            <p class="text-white/80">Enter your details for delivery</p>
+                            <p class="text-xs font-black text-gray-400 uppercase tracking-widest">Step 1</p>
+                            <p class="font-bold text-green-600">Cart</p>
                         </div>
                     </div>
                     
-                    <!-- Cart Summary -->
-                    <div id="cart-summary-badge" class="bg-white/10 backdrop-blur-sm border border-white/20 rounded-xl px-6 py-3">
-                        <div class="flex items-center gap-3">
-                            <i class="fas fa-shopping-cart text-white text-xl"></i>
-                            <div>
-                                <p class="text-white/80 text-sm">Cart Total</p>
-                                <p id="cart-total-badge" class="font-bold text-white text-xl">₹0</p>
-                            </div>
+                    <div class="flex-1 mx-6">
+                        <div class="progress-container">
+                            <div class="progress-fill" style="width: 50%"></div>
+                        </div>
+                    </div>
+                    
+                    <div class="flex items-center gap-4">
+                        <div class="w-12 h-12 bg-indigo-600 rounded-2xl flex items-center justify-center shadow-lg pulse-gentle">
+                            <span class="text-white font-black text-lg">2</span>
+                        </div>
+                        <div>
+                            <p class="text-xs font-black text-gray-400 uppercase tracking-widest">Step 2</p>
+                            <p class="font-bold text-indigo-600">Address & Delivery</p>
+                        </div>
+                    </div>
+                    
+                    <div class="flex-1 mx-6">
+                        <div class="progress-container">
+                            <div class="progress-fill" style="width: 0%"></div>
+                        </div>
+                    </div>
+                    
+                    <div class="flex items-center gap-4">
+                        <div class="w-12 h-12 bg-gray-200 rounded-2xl flex items-center justify-center">
+                            <span class="text-gray-400 font-black text-lg">3</span>
+                        </div>
+                        <div>
+                            <p class="text-xs font-black text-gray-400 uppercase tracking-widest">Step 3</p>
+                            <p class="font-bold text-gray-400">Payment</p>
                         </div>
                     </div>
                 </div>
                 
-                <!-- Progress Steps -->
-                <div class="glass-card rounded-2xl p-6 mb-8">
-                    <div class="flex items-center justify-between mb-4">
-                        <div class="flex items-center">
-                            <div class="step-indicator step-completed">
-                                <i class="fas fa-check text-sm"></i>
-                            </div>
-                            <div>
-                                <p class="font-semibold text-gray-700">Step 1</p>
-                                <p class="text-green-600 text-sm">Cart</p>
-                            </div>
+                <!-- Cart Summary -->
+                <div class="flex justify-between items-center pt-6 border-t border-gray-100">
+                    <div class="flex items-center gap-4">
+                        <div class="w-14 h-14 bg-indigo-50 rounded-2xl flex items-center justify-center">
+                            <i class="fas fa-shopping-cart text-indigo-600 text-xl"></i>
                         </div>
-                        
-                        <div class="flex-1 mx-4">
-                            <div class="progress-bar">
-                                <div class="progress-fill" style="width: 50%"></div>
-                            </div>
-                        </div>
-                        
-                        <div class="flex items-center">
-                            <div class="step-indicator step-active">
-                                2
-                            </div>
-                            <div>
-                                <p class="font-semibold text-gray-700">Step 2</p>
-                                <p class="text-blue-600 text-sm">Address & Delivery</p>
-                            </div>
-                        </div>
-                        
-                        <div class="flex-1 mx-4">
-                            <div class="progress-bar">
-                                <div class="progress-fill" style="width: 0%"></div>
-                            </div>
-                        </div>
-                        
-                        <div class="flex items-center">
-                            <div class="step-indicator step-inactive">
-                                3
-                            </div>
-                            <div>
-                                <p class="font-semibold text-gray-700">Step 3</p>
-                                <p class="text-gray-500 text-sm">Payment</p>
-                            </div>
+                        <div>
+                            <p class="text-xs font-black text-gray-400 uppercase tracking-widest">Cart Total</p>
+                            <p id="cart-total-badge" class="text-2xl font-black text-gray-900">₹0</p>
                         </div>
                     </div>
+                    
+                    <button onclick="window.location.href='https://clean-scripts.github.io/Easygo-Menu/'" 
+                            class="px-6 py-3 bg-gray-900 text-white rounded-2xl font-bold uppercase text-xs hover:bg-black transition-all">
+                        <i class="fas fa-arrow-left mr-2"></i>Edit Cart
+                    </button>
                 </div>
-            </header>
-            
-            <!-- Main Content -->
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                <!-- Left Column -->
-                <div class="space-y-8">
-                    <!-- Delivery Mode Selection -->
-                    <div class="glass-card rounded-2xl p-8">
-                        <h2 class="text-2xl font-bold text-gray-800 mb-6">Select Delivery Mode</h2>
-                        
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <!-- Delivery Option -->
-                            <div id="delivery-option" 
-                                 class="border-2 border-blue-500 bg-blue-50 rounded-xl p-6 cursor-pointer transition-all duration-300 hover:shadow-lg"
-                                 onclick="switchToDelivery()">
-                                <div class="flex items-center gap-4">
-                                    <div class="w-14 h-14 bg-blue-500 rounded-full flex items-center justify-center">
-                                        <i class="fas fa-motorcycle text-white text-xl"></i>
-                                    </div>
-                                    <div>
-                                        <h3 class="font-bold text-gray-800 text-lg">Home Delivery</h3>
-                                        <p class="text-blue-600 text-sm mt-1">Delivered to your doorstep</p>
-                                    </div>
-                                </div>
+            </div>
+
+            <!-- Delivery Mode Selection -->
+            <div class="glass-card rounded-[2rem] p-8 mb-10 border-2 border-gray-100">
+                <h2 class="text-2xl font-black uppercase mb-6">Select Delivery Mode</h2>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <!-- Delivery Option -->
+                    <div id="delivery-option" 
+                         class="border-2 border-indigo-500 bg-indigo-50 rounded-[2rem] p-8 cursor-pointer transition-all duration-300 hover:shadow-xl"
+                         onclick="switchToDelivery()">
+                        <div class="flex items-center gap-6">
+                            <div class="w-20 h-20 bg-indigo-600 rounded-2xl flex items-center justify-center shadow-lg">
+                                <i class="fas fa-motorcycle text-white text-2xl"></i>
                             </div>
-                            
-                            <!-- Takeaway Option -->
-                            <div id="takeaway-option" 
-                                 class="border-2 border-gray-300 rounded-xl p-6 cursor-pointer transition-all duration-300 hover:border-green-500 hover:shadow-lg"
-                                 onclick="switchToTakeaway()">
-                                <div class="flex items-center gap-4">
-                                    <div class="w-14 h-14 bg-gray-300 rounded-full flex items-center justify-center">
-                                        <i class="fas fa-store text-gray-600 text-xl"></i>
-                                    </div>
-                                    <div>
-                                        <h3 class="font-bold text-gray-800 text-lg">Takeaway</h3>
-                                        <p class="text-gray-600 text-sm mt-1">Pickup from Prime Square</p>
-                                    </div>
-                                </div>
+                            <div>
+                                <h3 class="font-black text-xl uppercase mb-2">Home Delivery</h3>
+                                <p class="text-indigo-600 font-bold text-sm">Delivered fresh to your doorstep</p>
+                                <p class="text-xs text-gray-500 mt-3 font-medium">• Free delivery on orders above ₹199</p>
+                                <p class="text-xs text-gray-500 font-medium">• Within 4km from Prime Square</p>
                             </div>
                         </div>
                     </div>
                     
-                    <!-- Delivery Address Form (Hidden for Takeaway) -->
-                    <div id="address-form-section" class="glass-card rounded-2xl p-8">
-                        <div class="flex items-center gap-3 mb-6">
-                            <div class="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center">
-                                <i class="fas fa-map-marker-alt text-blue-600 text-xl"></i>
+                    <!-- Takeaway Option -->
+                    <div id="takeaway-option" 
+                         class="border-2 border-gray-200 rounded-[2rem] p-8 cursor-pointer transition-all duration-300 hover:border-green-500 hover:shadow-xl"
+                         onclick="switchToTakeaway()">
+                        <div class="flex items-center gap-6">
+                            <div class="w-20 h-20 bg-gray-200 rounded-2xl flex items-center justify-center">
+                                <i class="fas fa-store text-gray-600 text-2xl"></i>
                             </div>
-                            <h2 class="text-2xl font-bold text-gray-800">Delivery Address</h2>
+                            <div>
+                                <h3 class="font-black text-xl uppercase mb-2">Takeaway</h3>
+                                <p class="text-gray-600 font-bold text-sm">Pickup from Prime Square</p>
+                                <p class="text-xs text-gray-500 mt-3 font-medium">• No delivery charges</p>
+                                <p class="text-xs text-gray-500 font-medium">• OTP verification at pickup</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-10">
+                <!-- Left Column - Forms -->
+                <div class="space-y-10">
+                    <!-- Delivery Address Form -->
+                    <div id="address-form-section" class="glass-card rounded-[2rem] p-8 border-2 border-gray-100">
+                        <div class="flex items-center gap-4 mb-8">
+                            <div class="w-14 h-14 bg-indigo-100 rounded-2xl flex items-center justify-center">
+                                <i class="fas fa-map-marker-alt text-indigo-600 text-xl"></i>
+                            </div>
+                            <div>
+                                <h2 class="text-2xl font-black uppercase">Delivery Address</h2>
+                                <p class="text-gray-500 text-sm font-medium">Enter your details for fresh delivery</p>
+                            </div>
                         </div>
                         
                         <form id="addressForm" class="space-y-6">
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 <!-- Name -->
                                 <div class="md:col-span-2">
-                                    <div class="floating-label-group">
-                                        <input type="text" 
-                                               id="name" 
-                                               required
-                                               class="floating-input w-full p-4 border-2 border-gray-300 rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition"
-                                               placeholder="Full Name">
-                                        <label class="floating-label">Full Name *</label>
-                                    </div>
+                                    <label class="text-xs font-black uppercase text-gray-400 mb-2 block">Full Name *</label>
+                                    <input type="text" 
+                                           id="name" 
+                                           required
+                                           class="w-full p-4 border-2 border-gray-200 rounded-2xl focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 outline-none transition font-medium"
+                                           placeholder="Your good name please">
                                 </div>
                                 
                                 <!-- Phone Number -->
                                 <div class="md:col-span-2">
-                                    <div class="floating-label-group">
-                                        <input type="tel" 
-                                               id="phone" 
-                                               required
-                                               pattern="[0-9]{10}"
-                                               class="floating-input w-full p-4 border-2 border-gray-300 rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition"
-                                               placeholder="Phone Number">
-                                        <label class="floating-label">Phone Number *</label>
-                                    </div>
+                                    <label class="text-xs font-black uppercase text-gray-400 mb-2 block">Phone Number *</label>
+                                    <input type="tel" 
+                                           id="phone" 
+                                           required
+                                           pattern="[0-9]{10}"
+                                           class="w-full p-4 border-2 border-gray-200 rounded-2xl focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 outline-none transition font-medium"
+                                           placeholder="10-digit WhatsApp number">
                                 </div>
                                 
                                 <!-- Address Type -->
                                 <div>
-                                    <div class="floating-label-group">
-                                        <select id="addressType" 
-                                                required
-                                                class="floating-input w-full p-4 border-2 border-gray-300 rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition appearance-none bg-white">
-                                            <option value="" disabled selected>Address Type</option>
-                                            <option value="Flat">Flat</option>
-                                            <option value="House">House</option>
-                                            <option value="Office">Office</option>
-                                            <option value="Hostel">Hostel</option>
-                                            <option value="PG">P.G.</option>
-                                        </select>
-                                        <label class="floating-label">Address Type *</label>
-                                    </div>
+                                    <label class="text-xs font-black uppercase text-gray-400 mb-2 block">Address Type *</label>
+                                    <select id="addressType" 
+                                            required
+                                            class="w-full p-4 border-2 border-gray-200 rounded-2xl focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 outline-none transition font-medium bg-white appearance-none">
+                                        <option value="" disabled selected>Select type</option>
+                                        <option value="Flat">Flat / Apartment</option>
+                                        <option value="House">House</option>
+                                        <option value="Office">Office</option>
+                                        <option value="Hostel">Hostel</option>
+                                        <option value="PG">P.G. Accommodation</option>
+                                    </select>
                                 </div>
                                 
                                 <!-- House Number -->
                                 <div>
-                                    <div class="floating-label-group">
-                                        <input type="text" 
-                                               id="houseNumber" 
-                                               required
-                                               class="floating-input w-full p-4 border-2 border-gray-300 rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition"
-                                               placeholder="House/Flat No.">
-                                        <label class="floating-label">House/Flat No. *</label>
-                                    </div>
+                                    <label class="text-xs font-black uppercase text-gray-400 mb-2 block">House/Flat No. *</label>
+                                    <input type="text" 
+                                           id="houseNumber" 
+                                           required
+                                           class="w-full p-4 border-2 border-gray-200 rounded-2xl focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 outline-none transition font-medium"
+                                           placeholder="House/Flat number">
                                 </div>
                                 
                                 <!-- Floor Number -->
                                 <div>
-                                    <div class="floating-label-group">
-                                        <input type="text" 
-                                               id="floorNumber"
-                                               class="floating-input w-full p-4 border-2 border-gray-300 rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition"
-                                               placeholder="Floor No.">
-                                        <label class="floating-label">Floor No.</label>
-                                    </div>
+                                    <label class="text-xs font-black uppercase text-gray-400 mb-2 block">Floor No.</label>
+                                    <input type="text" 
+                                           id="floorNumber"
+                                           class="w-full p-4 border-2 border-gray-200 rounded-2xl focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 outline-none transition font-medium"
+                                           placeholder="Floor number (optional)">
                                 </div>
                                 
                                 <!-- Locality -->
                                 <div class="md:col-span-2">
-                                    <div class="floating-label-group">
-                                        <input type="text" 
-                                               id="locality" 
-                                               required
-                                               class="floating-input w-full p-4 border-2 border-gray-300 rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition"
-                                               placeholder="Locality">
-                                        <label class="floating-label">Locality *</label>
-                                    </div>
+                                    <label class="text-xs font-black uppercase text-gray-400 mb-2 block">Locality / Area *</label>
+                                    <input type="text" 
+                                           id="locality" 
+                                           required
+                                           class="w-full p-4 border-2 border-gray-200 rounded-2xl focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 outline-none transition font-medium"
+                                           placeholder="Your locality or area">
                                 </div>
                                 
                                 <!-- Street -->
                                 <div class="md:col-span-2">
-                                    <div class="floating-label-group">
-                                        <input type="text" 
-                                               id="street" 
-                                               required
-                                               class="floating-input w-full p-4 border-2 border-gray-300 rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition"
-                                               placeholder="Street Name">
-                                        <label class="floating-label">Street Name *</label>
-                                    </div>
+                                    <label class="text-xs font-black uppercase text-gray-400 mb-2 block">Street Name *</label>
+                                    <input type="text" 
+                                           id="street" 
+                                           required
+                                           class="w-full p-4 border-2 border-gray-200 rounded-2xl focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 outline-none transition font-medium"
+                                           placeholder="Street name or landmark">
                                 </div>
                                 
                                 <!-- Pincode -->
                                 <div>
-                                    <div class="floating-label-group">
-                                        <input type="text" 
-                                               id="pincode" 
-                                               required
-                                               maxlength="6"
-                                               pattern="[0-9]{6}"
-                                               class="floating-input w-full p-4 border-2 border-gray-300 rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition"
-                                               placeholder="Pincode">
-                                        <label class="floating-label">Pincode *</label>
-                                    </div>
+                                    <label class="text-xs font-black uppercase text-gray-400 mb-2 block">Pincode *</label>
+                                    <input type="text" 
+                                           id="pincode" 
+                                           required
+                                           maxlength="6"
+                                           pattern="[0-9]{6}"
+                                           class="w-full p-4 border-2 border-gray-200 rounded-2xl focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 outline-none transition font-medium"
+                                           placeholder="6-digit pincode">
                                 </div>
                                 
                                 <!-- City -->
                                 <div>
-                                    <div class="floating-label-group">
-                                        <input type="text" 
-                                               id="city" 
-                                               readonly
-                                               class="w-full p-4 border-2 border-gray-300 rounded-xl bg-gray-50 text-gray-600"
-                                               placeholder="City">
-                                        <label class="floating-label">City</label>
-                                    </div>
+                                    <label class="text-xs font-black uppercase text-gray-400 mb-2 block">City</label>
+                                    <input type="text" 
+                                           id="city" 
+                                           readonly
+                                           class="w-full p-4 border-2 border-gray-200 rounded-2xl bg-gray-50 text-gray-600 font-medium"
+                                           placeholder="City">
                                 </div>
                                 
                                 <!-- State -->
                                 <div class="md:col-span-2">
-                                    <div class="floating-label-group">
-                                        <input type="text" 
-                                               id="state" 
-                                               readonly
-                                               class="w-full p-4 border-2 border-gray-300 rounded-xl bg-gray-50 text-gray-600"
-                                               placeholder="State">
-                                        <label class="floating-label">State</label>
-                                    </div>
+                                    <label class="text-xs font-black uppercase text-gray-400 mb-2 block">State</label>
+                                    <input type="text" 
+                                           id="state" 
+                                           readonly
+                                           class="w-full p-4 border-2 border-gray-200 rounded-2xl bg-gray-50 text-gray-600 font-medium"
+                                           placeholder="State">
                                 </div>
                             </div>
                         </form>
                     </div>
                     
-                    <!-- Takeaway Form (Only Name & Phone) -->
-                    <div id="takeaway-form-section" class="glass-card rounded-2xl p-8 hidden">
-                        <div class="flex items-center gap-3 mb-6">
-                            <div class="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center">
+                    <!-- Takeaway Form -->
+                    <div id="takeaway-form-section" class="glass-card rounded-[2rem] p-8 border-2 border-gray-100 hidden">
+                        <div class="flex items-center gap-4 mb-8">
+                            <div class="w-14 h-14 bg-green-100 rounded-2xl flex items-center justify-center">
                                 <i class="fas fa-store text-green-600 text-xl"></i>
                             </div>
-                            <h2 class="text-2xl font-bold text-gray-800">Takeaway Details</h2>
+                            <div>
+                                <h2 class="text-2xl font-black uppercase">Takeaway Details</h2>
+                                <p class="text-gray-500 text-sm font-medium">Pickup from our kitchen</p>
+                            </div>
                         </div>
                         
-                        <div class="mb-6 p-6 bg-green-50 border-2 border-green-200 rounded-xl">
-                            <h3 class="font-bold text-green-800 mb-3">Pickup Information</h3>
+                        <div class="mb-8 p-6 bg-green-50 border-2 border-green-200 rounded-2xl">
+                            <h3 class="font-bold text-green-800 mb-4 text-lg uppercase">📍 Pickup Information</h3>
                             <div class="space-y-3 text-green-700">
-                                <p class="flex items-center gap-2">
+                                <p class="flex items-center gap-3">
                                     <i class="fas fa-map-marker-alt"></i>
                                     <span><strong>Address:</strong> Prime Square, Omaxe City 1, Indore</span>
                                 </p>
-                                <p class="flex items-center gap-2">
+                                <p class="flex items-center gap-3">
                                     <i class="fas fa-clock"></i>
-                                    <span><strong>Timings:</strong> 6:00 PM - 10:00 PM</span>
+                                    <span><strong>Timings:</strong> 5:45 PM - 10:30 PM</span>
                                 </p>
-                                <p class="flex items-center gap-2">
+                                <p class="flex items-center gap-3">
                                     <i class="fas fa-mobile-alt"></i>
-                                    <span><strong>OTP Verification:</strong> Required at pickup</span>
+                                    <span><strong>OTP Verification:</strong> Required at pickup counter</span>
                                 </p>
                             </div>
                         </div>
                         
                         <form id="takeawayForm" class="space-y-6">
                             <div>
-                                <div class="floating-label-group">
-                                    <input type="text" 
-                                           id="takeaway-name" 
-                                           required
-                                           class="floating-input w-full p-4 border-2 border-gray-300 rounded-xl focus:border-green-500 focus:ring-2 focus:ring-green-200 outline-none transition"
-                                           placeholder="Your Name">
-                                    <label class="floating-label">Your Name *</label>
-                                </div>
+                                <label class="text-xs font-black uppercase text-gray-400 mb-2 block">Your Name *</label>
+                                <input type="text" 
+                                       id="takeaway-name" 
+                                       required
+                                       class="w-full p-4 border-2 border-gray-200 rounded-2xl focus:border-green-500 focus:ring-2 focus:ring-green-100 outline-none transition font-medium"
+                                       placeholder="Your good name please">
                             </div>
                             
                             <div>
-                                <div class="floating-label-group">
-                                    <input type="tel" 
-                                           id="takeaway-phone" 
-                                           required
-                                           pattern="[0-9]{10}"
-                                           class="floating-input w-full p-4 border-2 border-gray-300 rounded-xl focus:border-green-500 focus:ring-2 focus:ring-green-200 outline-none transition"
-                                           placeholder="Phone Number">
-                                    <label class="floating-label">Phone Number *</label>
-                                </div>
-                                <p class="text-sm text-gray-500 mt-2">This number will be used for OTP verification at pickup</p>
+                                <label class="text-xs font-black uppercase text-gray-400 mb-2 block">Phone Number *</label>
+                                <input type="tel" 
+                                       id="takeaway-phone" 
+                                       required
+                                       pattern="[0-9]{10}"
+                                       class="w-full p-4 border-2 border-gray-200 rounded-2xl focus:border-green-500 focus:ring-2 focus:ring-green-100 outline-none transition font-medium"
+                                       placeholder="10-digit WhatsApp number">
+                                <p class="text-xs text-gray-500 mt-2 font-medium">This number will be used for OTP verification at pickup</p>
                             </div>
                         </form>
                     </div>
                     
-                    <!-- Location Button (Only for Delivery) -->
-                    <div id="location-section" class="glass-card rounded-2xl p-8">
-                        <h3 class="text-xl font-bold text-gray-800 mb-4">Set Your Location</h3>
-                        <p class="text-gray-600 mb-6">Click below to set your location for delivery charge calculation.</p>
+                    <!-- Location Section -->
+                    <div id="location-section" class="glass-card rounded-[2rem] p-8 border-2 border-gray-100">
+                        <div class="flex items-center gap-4 mb-6">
+                            <div class="w-14 h-14 bg-purple-100 rounded-2xl flex items-center justify-center">
+                                <i class="fas fa-location-dot text-purple-600 text-xl"></i>
+                            </div>
+                            <div>
+                                <h3 class="text-xl font-black uppercase">Set Your Location</h3>
+                                <p class="text-gray-500 text-sm font-medium">For delivery charge calculation</p>
+                            </div>
+                        </div>
                         
                         <button id="getLocationBtn" 
-                                class="w-full flex items-center justify-center gap-3 p-5 bg-gradient-to-r from-blue-500 to-purple-600 text-white font-bold rounded-xl hover:opacity-90 transition-all btn-pulse">
+                                class="w-full flex items-center justify-center gap-4 p-5 bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-black uppercase rounded-2xl hover:opacity-90 transition-all shadow-lg mb-4">
                             <i class="fas fa-map-marker-alt text-xl"></i>
                             <span class="text-lg">Set Delivery Location</span>
                         </button>
                         
-                        <div class="mt-4 flex gap-4">
+                        <div class="grid grid-cols-2 gap-4">
                             <button id="useCurrentLocationBtn" 
-                                    class="flex-1 flex items-center justify-center gap-2 p-4 bg-blue-50 border-2 border-blue-200 text-blue-700 rounded-xl hover:bg-blue-100 transition">
+                                    class="flex items-center justify-center gap-3 p-4 bg-indigo-50 border-2 border-indigo-200 text-indigo-700 font-bold rounded-2xl hover:bg-indigo-100 transition">
                                 <i class="fas fa-location-crosshairs"></i>
                                 <span>Auto Location</span>
                             </button>
                             
                             <button id="manualLocationBtn" 
-                                    class="flex-1 flex items-center justify-center gap-2 p-4 bg-purple-50 border-2 border-purple-200 text-purple-700 rounded-xl hover:bg-purple-100 transition">
+                                    class="flex items-center justify-center gap-3 p-4 bg-purple-50 border-2 border-purple-200 text-purple-700 font-bold rounded-2xl hover:bg-purple-100 transition">
                                 <i class="fas fa-map-pin"></i>
                                 <span>Manual Pin</span>
                             </button>
                         </div>
                         
                         <!-- Location Status -->
-                        <div id="locationStatus" class="mt-6 p-4 bg-green-50 border-2 border-green-200 rounded-xl hidden">
-                            <div class="flex items-center gap-3">
+                        <div id="locationStatus" class="mt-6 p-5 bg-green-50 border-2 border-green-200 rounded-2xl hidden">
+                            <div class="flex items-center gap-4">
                                 <i class="fas fa-check-circle text-2xl text-green-500"></i>
                                 <div>
-                                    <p class="font-bold text-green-700">Location Set Successfully</p>
+                                    <p class="font-bold text-green-800 text-lg">Location Set Successfully!</p>
                                     <p class="text-sm text-gray-600">Distance: <span id="previewDistance" class="font-bold">-- km</span></p>
                                 </div>
                             </div>
@@ -539,15 +454,15 @@
                     </div>
                 </div>
                 
-                <!-- Right Column -->
-                <div class="space-y-8">
+                <!-- Right Column - Map & Summary -->
+                <div class="space-y-10">
                     <!-- Map Container -->
-                    <div id="map-section" class="glass-card rounded-2xl p-8">
+                    <div id="map-section" class="glass-card rounded-[2rem] p-8 border-2 border-gray-100">
                         <div class="flex items-center justify-between mb-6">
-                            <h2 class="text-2xl font-bold text-gray-800">Location Map</h2>
-                            <div class="flex items-center gap-4 text-sm text-gray-600">
+                            <h2 class="text-2xl font-black uppercase">Location Map</h2>
+                            <div class="flex items-center gap-4 text-xs font-bold text-gray-600">
                                 <div class="flex items-center gap-2">
-                                    <div class="w-3 h-3 bg-blue-500 rounded-full"></div>
+                                    <div class="w-3 h-3 bg-indigo-500 rounded-full"></div>
                                     <span>Restaurant</span>
                                 </div>
                                 <div class="flex items-center gap-2">
@@ -557,83 +472,85 @@
                             </div>
                         </div>
                         
-                        <!-- MAP CONTAINER - CRITICAL FIX -->
-                        <div id="map" style="height: 400px; width: 100%;"></div>
+                        <div id="map"></div>
                         
                         <!-- Location Link -->
-                        <div id="locationLinkContainer" class="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-xl hidden">
+                        <div id="locationLinkContainer" class="mt-6 p-4 bg-indigo-50 border-2 border-indigo-200 rounded-2xl hidden">
                             <div class="flex items-center justify-between gap-4">
                                 <div class="flex-1 min-w-0">
-                                    <p class="text-sm font-medium text-blue-800 mb-1">Delivery Location:</p>
-                                    <a id="locationLink" href="#" target="_blank" class="text-blue-600 text-sm truncate block hover:underline"></a>
+                                    <p class="text-xs font-black text-indigo-800 uppercase mb-1">Delivery Location:</p>
+                                    <a id="locationLink" href="#" target="_blank" class="text-indigo-600 text-sm truncate block hover:underline font-medium"></a>
                                 </div>
-                                <button id="copyLinkBtn" class="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition flex-shrink-0">
-                                    <i class="fas fa-copy"></i>
+                                <button id="copyLinkBtn" class="px-4 py-2 bg-indigo-600 text-white rounded-xl hover:bg-indigo-700 transition font-bold text-xs uppercase">
+                                    <i class="fas fa-copy"></i> Copy
                                 </button>
                             </div>
                         </div>
                     </div>
                     
                     <!-- Delivery Charges Card -->
-                    <div id="deliveryChargesCard" class="glass-card rounded-2xl p-8 hidden">
-                        <div class="flex items-center gap-3 mb-6">
-                            <div class="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center">
-                                <i class="fas fa-truck text-blue-600 text-xl"></i>
+                    <div id="deliveryChargesCard" class="glass-card rounded-[2rem] p-8 border-2 border-gray-100 hidden">
+                        <div class="flex items-center gap-4 mb-8">
+                            <div class="w-14 h-14 bg-indigo-100 rounded-2xl flex items-center justify-center">
+                                <i class="fas fa-truck text-indigo-600 text-xl"></i>
                             </div>
-                            <h2 class="text-2xl font-bold text-gray-800">Delivery Summary</h2>
+                            <div>
+                                <h2 class="text-2xl font-black uppercase">Delivery Summary</h2>
+                                <p class="text-gray-500 text-sm font-medium">Your delivery charges breakdown</p>
+                            </div>
                         </div>
                         
                         <!-- Distance Display -->
-                        <div class="mb-6 p-5 bg-gradient-to-r from-blue-50 to-blue-100 border-2 border-blue-200 rounded-xl">
+                        <div class="mb-8 p-6 bg-gradient-to-r from-indigo-50 to-purple-50 border-2 border-indigo-200 rounded-2xl">
                             <div class="flex items-center justify-between">
                                 <div>
-                                    <p class="font-medium text-gray-700">Distance from Prime Square</p>
-                                    <p class="text-sm text-blue-600">Your delivery location</p>
+                                    <p class="font-medium text-gray-700 text-lg">Distance from Prime Square</p>
+                                    <p class="text-sm text-indigo-600 font-medium">Your delivery location</p>
                                 </div>
-                                <span id="distanceValue" class="text-3xl font-bold text-blue-700">-- km</span>
+                                <span id="distanceValue" class="text-4xl font-black text-indigo-700">-- km</span>
                             </div>
                         </div>
                         
                         <!-- Charges Breakdown -->
                         <div class="space-y-4">
-                            <div class="flex justify-between items-center p-4 bg-gray-50 rounded-xl">
-                                <span class="font-medium text-gray-700">Base Fare</span>
-                                <span id="baseFare" class="font-bold text-gray-800 text-lg">₹0</span>
+                            <div class="flex justify-between items-center p-5 bg-gray-50 rounded-2xl">
+                                <span class="font-bold text-gray-700">Base Fare</span>
+                                <span id="baseFare" class="font-black text-gray-900 text-xl">₹0</span>
                             </div>
                             
-                            <div class="flex justify-between items-center p-4 bg-gray-50 rounded-xl">
-                                <span class="font-medium text-gray-700">GST (18%)</span>
-                                <span id="gstValue" class="font-bold text-gray-800 text-lg">₹0</span>
+                            <div class="flex justify-between items-center p-5 bg-gray-50 rounded-2xl">
+                                <span class="font-bold text-gray-700">GST (18%)</span>
+                                <span id="gstValue" class="font-black text-gray-900 text-xl">₹0</span>
                             </div>
                             
-                            <div class="border-t border-gray-200 pt-4">
-                                <div class="flex justify-between items-center p-5 bg-gradient-to-r from-green-50 to-emerald-50 border-2 border-green-200 rounded-xl">
+                            <div class="border-t-2 border-gray-200 pt-6 mt-6">
+                                <div class="flex justify-between items-center p-6 bg-gradient-to-r from-green-50 to-emerald-50 border-2 border-green-200 rounded-2xl">
                                     <div>
-                                        <p class="font-bold text-gray-800 text-lg">Total Delivery Charge</p>
-                                        <p class="text-sm text-green-600">Inclusive of all taxes</p>
+                                        <p class="font-black text-gray-900 text-lg uppercase">Total Delivery Charge</p>
+                                        <p class="text-sm text-green-600 font-medium">Inclusive of all taxes</p>
                                     </div>
-                                    <span id="totalCharge" class="font-bold text-green-700 text-3xl">₹0</span>
+                                    <span id="totalCharge" class="font-black text-green-700 text-3xl">₹0</span>
                                 </div>
                             </div>
                             
                             <!-- Free Delivery Offer -->
-                            <div id="freeDeliveryOffer" class="p-4 bg-gradient-to-r from-green-50 to-emerald-50 border-2 border-green-200 rounded-xl hidden">
-                                <div class="flex items-center gap-3">
-                                    <i class="fas fa-gift text-green-500 text-xl"></i>
+                            <div id="freeDeliveryOffer" class="p-5 bg-gradient-to-r from-green-50 to-emerald-50 border-2 border-green-200 rounded-2xl hidden">
+                                <div class="flex items-center gap-4">
+                                    <i class="fas fa-gift text-green-500 text-2xl"></i>
                                     <div>
-                                        <p class="font-bold text-green-800">🎉 FREE DELIVERY!</p>
-                                        <p class="text-sm text-green-700">Your order qualifies for free delivery</p>
+                                        <p class="font-black text-green-800 text-lg uppercase">🎉 FREE DELIVERY!</p>
+                                        <p class="text-sm text-green-700 font-medium">Your order qualifies for free delivery</p>
                                     </div>
                                 </div>
                             </div>
                             
                             <!-- Range Warning -->
-                            <div id="rangeWarning" class="p-4 bg-red-50 border-2 border-red-200 rounded-xl hidden">
-                                <div class="flex items-center gap-3">
-                                    <i class="fas fa-exclamation-triangle text-red-500 text-xl"></i>
+                            <div id="rangeWarning" class="p-5 bg-red-50 border-2 border-red-200 rounded-2xl hidden">
+                                <div class="flex items-center gap-4">
+                                    <i class="fas fa-exclamation-triangle text-red-500 text-2xl"></i>
                                     <div>
-                                        <p class="font-bold text-red-800">Beyond Delivery Range</p>
-                                        <p class="text-sm text-red-700">Please select takeaway option</p>
+                                        <p class="font-black text-red-800 text-lg uppercase">Beyond Delivery Range</p>
+                                        <p class="text-sm text-red-700 font-medium">Please select takeaway option</p>
                                     </div>
                                 </div>
                             </div>
@@ -641,97 +558,91 @@
                         
                         <!-- Action Button -->
                         <button id="proceedToPaymentBtn" 
-                                class="w-full mt-8 flex items-center justify-center gap-3 p-5 bg-gradient-to-r from-green-500 to-emerald-600 text-white font-bold rounded-xl hover:opacity-90 transition-all shadow-lg">
+                                class="w-full mt-10 flex items-center justify-center gap-4 p-5 bg-gradient-to-r from-green-500 to-emerald-600 text-white font-black uppercase rounded-2xl hover:opacity-90 transition-all shadow-lg text-lg">
                             <i class="fas fa-check-circle text-xl"></i>
-                            <span class="text-lg">Proceed to Payment</span>
+                            <span>Proceed to Payment</span>
                         </button>
                     </div>
                     
                     <!-- Takeaway Action Card -->
-                    <div id="takeawayActionCard" class="glass-card rounded-2xl p-8 hidden">
-                        <div class="flex items-center gap-3 mb-6">
-                            <div class="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center">
+                    <div id="takeawayActionCard" class="glass-card rounded-[2rem] p-8 border-2 border-gray-100 hidden">
+                        <div class="flex items-center gap-4 mb-8">
+                            <div class="w-14 h-14 bg-green-100 rounded-2xl flex items-center justify-center">
                                 <i class="fas fa-store text-green-600 text-xl"></i>
                             </div>
-                            <h2 class="text-2xl font-bold text-gray-800">Takeaway Ready</h2>
+                            <div>
+                                <h2 class="text-2xl font-black uppercase">Takeaway Ready!</h2>
+                                <p class="text-gray-500 text-sm font-medium">Pickup from our kitchen</p>
+                            </div>
                         </div>
                         
-                        <div class="mb-6 p-5 bg-gradient-to-r from-green-50 to-emerald-50 border-2 border-green-200 rounded-xl">
+                        <div class="mb-8 p-6 bg-gradient-to-r from-green-50 to-emerald-50 border-2 border-green-200 rounded-2xl">
                             <div class="space-y-4">
                                 <div class="flex items-center gap-3">
                                     <i class="fas fa-map-marker-alt text-green-500"></i>
                                     <div>
-                                        <p class="text-sm text-gray-600">Pickup Location</p>
+                                        <p class="text-xs font-black text-gray-600 uppercase">Pickup Location</p>
                                         <p class="font-bold text-green-700">Prime Square, Omaxe City 1, Indore</p>
                                     </div>
                                 </div>
                                 <div class="flex items-center gap-3">
                                     <i class="fas fa-clock text-green-500"></i>
                                     <div>
-                                        <p class="text-sm text-gray-600">Pickup Time</p>
-                                        <p class="font-bold text-green-700">6:00 PM - 10:00 PM</p>
+                                        <p class="text-xs font-black text-gray-600 uppercase">Pickup Time</p>
+                                        <p class="font-bold text-green-700">5:45 PM - 10:30 PM</p>
                                     </div>
                                 </div>
                             </div>
                         </div>
                         
                         <button id="proceedToPaymentTakeawayBtn" 
-                                class="w-full flex items-center justify-center gap-3 p-5 bg-gradient-to-r from-green-500 to-emerald-600 text-white font-bold rounded-xl hover:opacity-90 transition-all shadow-lg">
+                                class="w-full flex items-center justify-center gap-4 p-5 bg-gradient-to-r from-green-500 to-emerald-600 text-white font-black uppercase rounded-2xl hover:opacity-90 transition-all shadow-lg text-lg">
                             <i class="fas fa-check-circle text-xl"></i>
-                            <span class="text-lg">Proceed to Payment</span>
+                            <span>Proceed to Payment</span>
                         </button>
                         
                         <button id="switchToDeliveryBtn" 
-                                class="w-full mt-4 flex items-center justify-center gap-3 p-4 bg-blue-50 border-2 border-blue-200 text-blue-700 font-bold rounded-xl hover:bg-blue-100 transition">
+                                class="w-full mt-4 flex items-center justify-center gap-3 p-4 bg-indigo-50 border-2 border-indigo-200 text-indigo-700 font-bold rounded-2xl hover:bg-indigo-100 transition">
                             <i class="fas fa-motorcycle"></i>
                             <span>Switch to Delivery</span>
                         </button>
                     </div>
                 </div>
             </div>
-            
-            <!-- Footer -->
-            <footer class="bg-gray-900 text-white py-8 mt-12">
-                <div class="max-w-6xl mx-auto px-4">
-                    <div class="flex flex-col md:flex-row justify-between items-center">
-                        <div class="mb-6 md:mb-0">
-                            <div class="flex items-center">
-                                <img src="https://raw.githubusercontent.com/Clean-Scripts/EasyGo-Expense-Tracker/refs/heads/main/logo.png" 
-                                     class="h-12 w-12 rounded-full bg-white p-1 mr-3">
-                                <div>
-                                    <h2 class="text-xl font-bold">Easy Go</h2>
-                                    <p class="text-gray-400 text-sm">Freshness & Speed Delivered</p>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <div class="text-center md:text-right">
-                            <p class="text-gray-400 text-sm mb-2">
-                                © 2024 Easy Go + All Rights Reserved
-                            </p>
-                            <p class="text-gray-500 text-xs">
-                                Serving daily from 5:00 PM to 10:00 PM
-                            </p>
-                            <div class="mt-4">
-                                <a href="https://clean-scripts.github.io/Easygo-Menu/" class="text-gray-400 hover:text-white text-sm mr-4">View Menu</a>
-                                <a href="#" class="text-gray-400 hover:text-white text-sm mr-4">Privacy Policy</a>
-                                <a href="#" class="text-gray-400 hover:text-white text-sm">Terms & Conditions</a>
-                            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="bg-gray-900 text-white py-8">
+        <div class="max-w-6xl mx-auto px-4">
+            <div class="flex flex-col md:flex-row justify-between items-center">
+                <div class="mb-6 md:mb-0">
+                    <div class="flex items-center">
+                        <img src="https://raw.githubusercontent.com/Clean-Scripts/EasyGo-Expense-Tracker/refs/heads/main/logo.png" 
+                             class="h-12 w-12 rounded-full bg-white p-1 mr-3">
+                        <div>
+                            <h2 class="text-xl font-bold">Easy Go</h2>
+                            <p class="text-gray-400 text-sm">Freshness & Speed Delivered</p>
                         </div>
                     </div>
                 </div>
-            </footer>
+                
+                <div class="text-center md:text-right">
+                    <p class="text-gray-400 text-sm mb-2">
+                        © 2024 Easy Go + All Rights Reserved
+                    </p>
+                    <p class="text-gray-500 text-xs">
+                        Serving daily from 5:45 PM to 10:30 PM
+                    </p>
+                    <div class="mt-4">
+                        <a href="https://clean-scripts.github.io/Easygo-Menu/" class="text-gray-400 hover:text-white text-sm mr-4">View Menu</a>
+                        <a href="#" class="text-gray-400 hover:text-white text-sm mr-4">Privacy Policy</a>
+                        <a href="#" class="text-gray-400 hover:text-white text-sm">Terms & Conditions</a>
+                    </div>
+                </div>
+            </div>
         </div>
-    </div>
-    
-    <!-- Loading Overlay -->
-    <div id="loadingOverlay" class="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50 hidden">
-        <div class="bg-white p-10 rounded-2xl shadow-2xl text-center max-w-sm">
-            <div class="loader mx-auto mb-6"></div>
-            <p class="text-xl font-bold text-gray-800 mb-2">Processing Your Request</p>
-            <p class="text-gray-600">Please wait while we verify your details...</p>
-        </div>
-    </div>
+    </footer>
 
 <script>
     // Global variables
@@ -744,48 +655,45 @@
     // Restaurant location
     const primeSquareLocation = [22.7767737, 75.9605483];
     
-    // ====== SIMPLIFIED INITIALIZATION ======
+    // ====== MAIN INITIALIZATION ======
     document.addEventListener('DOMContentLoaded', function() {
-        console.log("DOM Content Loaded - Starting initialization");
+        console.log("Easy Go Address Page Loading...");
         
         // Check cart first
         if (checkCartEmpty()) {
-            console.log("Cart is empty - stopping initialization");
+            console.log("Cart empty - stopping");
             return;
         }
-        
-        console.log("Cart has items - proceeding with initialization");
         
         // Initialize the page
         initializePage();
     });
     
-    // ====== SEPARATE INITIALIZATION FUNCTION ======
     function initializePage() {
         console.log("Initializing page...");
         
-        // 1. Load saved address first
+        // 1. Load saved address
         loadSavedAddress();
         
         // 2. Load cart total
         loadCartTotal();
         
-        // 3. Initialize map AFTER a short delay to ensure DOM is ready
+        // 3. Initialize map after delay
         setTimeout(() => {
             console.log("Initializing map...");
             initMap();
-        }, 100);
+        }, 300);
         
         // 4. Set default mode
         switchToDelivery();
         
-        // 5. Set up event listeners
+        // 5. Setup event listeners
         setupEventListeners();
         
         console.log("Page initialization complete");
     }
     
-    // ====== CHECK IF CART IS EMPTY ======
+    // ====== CHECK CART EMPTY ======
     function checkCartEmpty() {
         try {
             const cart = JSON.parse(localStorage.getItem('easygo-cart') || '[]');
@@ -795,10 +703,8 @@
             
             if (cart.length === 0 || cartTotal <= 0) {
                 console.log("Cart is empty - showing overlay");
-                // Show empty cart overlay
                 document.getElementById('emptyCartOverlay').classList.remove('hidden');
                 
-                // Start countdown
                 let seconds = 5;
                 const countdownElement = document.getElementById('countdown');
                 countdownElement.textContent = seconds;
@@ -821,67 +727,6 @@
             console.error("Error checking cart:", error);
             return false;
         }
-    }
-    
-    // ====== SETUP EVENT LISTENERS ======
-    function setupEventListeners() {
-        console.log("Setting up event listeners...");
-        
-        // Pincode lookup
-        document.getElementById('pincode').addEventListener('input', function() {
-            const pincode = this.value;
-            if (pincode.length === 6) {
-                document.getElementById('city').value = "Indore";
-                document.getElementById('state').value = "Madhya Pradesh";
-            }
-        });
-        
-        // Location buttons
-        document.getElementById('getLocationBtn').addEventListener('click', getCurrentLocation);
-        document.getElementById('useCurrentLocationBtn').addEventListener('click', getCurrentLocation);
-        
-        document.getElementById('manualLocationBtn').addEventListener('click', function() {
-            if (deliveryMode === 'takeaway') return;
-            if (validateForm()) {
-                alert('Click on the map to set your delivery location');
-                map.once('click', function(e) {
-                    setUserLocation(e.latlng.lat, e.latlng.lng);
-                });
-            }
-        });
-        
-        // Copy location link
-        document.getElementById('copyLinkBtn').addEventListener('click', function() {
-            navigator.clipboard.writeText(googleMapsLink);
-            this.innerHTML = '<i class="fas fa-check"></i> Copied!';
-            this.classList.add('bg-green-500');
-            setTimeout(() => {
-                this.innerHTML = '<i class="fas fa-copy"></i>';
-                this.classList.remove('bg-green-500');
-                this.classList.add('bg-blue-500');
-            }, 2000);
-        });
-        
-        // Proceed to payment (delivery)
-        document.getElementById('proceedToPaymentBtn').addEventListener('click', function() {
-            if (!validateForm()) return;
-            if (deliveryMode === 'delivery' && !userLocation) {
-                alert('Please set your delivery location first');
-                return;
-            }
-            saveAddressToStorage(getAddressData());
-            window.location.href = 'https://clean-scripts.github.io/Easygo-Payment/';
-        });
-        
-        // Proceed to payment (takeaway)
-        document.getElementById('proceedToPaymentTakeawayBtn').addEventListener('click', function() {
-            if (!validateForm()) return;
-            saveAddressToStorage(getTakeawayData());
-            window.location.href = 'https://clean-scripts.github.io/Easygo-Payment/';
-        });
-        
-        // Switch to delivery from takeaway
-        document.getElementById('switchToDeliveryBtn').addEventListener('click', switchToDelivery);
     }
     
     // ====== LOAD SAVED ADDRESS ======
@@ -928,26 +773,22 @@
         }
     }
     
-    // ====== REVERSE GEOCODING TO AUTO-FILL ADDRESS ======
+    // ====== REVERSE GEOCODING ======
     async function reverseGeocode(lat, lng) {
         try {
             document.getElementById('loadingOverlay').classList.remove('hidden');
             
-            // Using Nominatim for reverse geocoding
             const response = await fetch(
                 `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=18&addressdetails=1`
             );
             
-            if (!response.ok) {
-                throw new Error('Geocoding failed');
-            }
+            if (!response.ok) throw new Error('Geocoding failed');
             
             const data = await response.json();
             
             if (data.address) {
                 const address = data.address;
                 
-                // Auto-fill form fields
                 document.getElementById('locality').value = address.neighbourhood || address.suburb || address.city_district || '';
                 document.getElementById('street').value = address.road || address.footway || '';
                 
@@ -977,10 +818,71 @@
         }
     }
     
-    // ====== INITIALIZE MAP - CRITICAL FIX ======
+    // ====== SETUP EVENT LISTENERS ======
+    function setupEventListeners() {
+        console.log("Setting up event listeners...");
+        
+        // Pincode lookup
+        document.getElementById('pincode').addEventListener('input', function() {
+            const pincode = this.value;
+            if (pincode.length === 6) {
+                document.getElementById('city').value = "Indore";
+                document.getElementById('state').value = "Madhya Pradesh";
+            }
+        });
+        
+        // Location buttons
+        document.getElementById('getLocationBtn').addEventListener('click', getCurrentLocation);
+        document.getElementById('useCurrentLocationBtn').addEventListener('click', getCurrentLocation);
+        
+        document.getElementById('manualLocationBtn').addEventListener('click', function() {
+            if (deliveryMode === 'takeaway') return;
+            if (validateForm()) {
+                alert('Click on the map to set your delivery location');
+                map.once('click', function(e) {
+                    setUserLocation(e.latlng.lat, e.latlng.lng);
+                });
+            }
+        });
+        
+        // Copy location link
+        document.getElementById('copyLinkBtn').addEventListener('click', function() {
+            navigator.clipboard.writeText(googleMapsLink);
+            this.innerHTML = '<i class="fas fa-check"></i> Copied!';
+            this.classList.add('bg-green-500');
+            setTimeout(() => {
+                this.innerHTML = '<i class="fas fa-copy"></i> Copy';
+                this.classList.remove('bg-green-500');
+                this.classList.add('bg-indigo-600');
+            }, 2000);
+        });
+        
+        // Proceed to payment (delivery)
+        document.getElementById('proceedToPaymentBtn').addEventListener('click', function() {
+            if (!validateForm()) return;
+            if (deliveryMode === 'delivery' && !userLocation) {
+                alert('Please set your delivery location first');
+                return;
+            }
+            saveAddressToStorage(getAddressData());
+            window.location.href = 'https://clean-scripts.github.io/Easygo-Payment/';
+        });
+        
+        // Proceed to payment (takeaway)
+        document.getElementById('proceedToPaymentTakeawayBtn').addEventListener('click', function() {
+            if (!validateForm()) return;
+            saveAddressToStorage(getTakeawayData());
+            window.location.href = 'https://clean-scripts.github.io/Easygo-Payment/';
+        });
+        
+        // Switch to delivery from takeaway
+        document.getElementById('switchToDeliveryBtn').addEventListener('click', switchToDelivery);
+    }
+    
+    // ====== INITIALIZE MAP ======
     function initMap(lat = primeSquareLocation[0], lng = primeSquareLocation[1]) {
         try {
-            console.log("Initializing map at coordinates:", lat, lng);
+            console.log("Initializing map at:", lat, lng);
             
             const mapContainer = document.getElementById('map');
             if (!mapContainer) {
@@ -988,13 +890,13 @@
                 return;
             }
             
-            // Clear any existing map
+            // Clear existing map
             if (map) {
                 map.remove();
                 map = null;
             }
             
-            // Set explicit height for map container
+            // Set explicit dimensions
             mapContainer.style.height = '400px';
             mapContainer.style.width = '100%';
             
@@ -1009,7 +911,7 @@
             
             // Add restaurant marker
             L.marker(primeSquareLocation).addTo(map)
-                .bindPopup('<b>Prime Square, EasyGo Restaurant</b>')
+                .bindPopup('<b>Prime Square, EasyGo Restaurant</b><br>📍 Our Kitchen')
                 .openPopup();
                 
             // Add delivery range circles
@@ -1036,27 +938,26 @@
                 }
             });
             
-            // Force map to invalidate size
+            // Force map resize
             setTimeout(() => {
                 if (map) {
                     map.invalidateSize();
                     console.log("Map invalidated size");
                 }
-            }, 300);
+            }, 500);
             
             console.log("Map initialized successfully");
             
         } catch (error) {
             console.error("Error initializing map:", error);
-            // Show fallback message
             const mapContainer = document.getElementById('map');
             if (mapContainer) {
                 mapContainer.innerHTML = `
-                    <div class="h-full flex flex-col items-center justify-center bg-gray-100 rounded-xl p-8">
+                    <div class="h-full flex flex-col items-center justify-center bg-gray-100 rounded-2xl p-8">
                         <div class="text-4xl mb-4">🗺️</div>
                         <p class="font-bold text-gray-700">Map Loading Error</p>
-                        <p class="text-gray-600 text-sm mt-2">Error: ${error.message}</p>
-                        <button onclick="initMap()" class="mt-4 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600">
+                        <p class="text-gray-600 text-sm mt-2">Please refresh the page</p>
+                        <button onclick="initMap()" class="mt-4 px-4 py-2 bg-indigo-600 text-white rounded-xl hover:bg-indigo-700 font-bold">
                             Retry Loading Map
                         </button>
                     </div>
@@ -1071,12 +972,12 @@
             console.log("Setting user location:", lat, lng);
             userLocation = { lat, lng };
             
-            // Remove existing user marker
+            // Remove existing marker
             if (userMarker) {
                 map.removeLayer(userMarker);
             }
             
-            // Create new user marker
+            // Create new marker
             userMarker = L.marker([lat, lng], { 
                 draggable: true,
                 icon: L.divIcon({
@@ -1087,20 +988,20 @@
                 })
             }).addTo(map);
             
-            // Center map on user location
+            // Center map
             map.setView([lat, lng], 16);
             
-            // Auto-fill address using reverse geocoding
+            // Auto-fill address
             await reverseGeocode(lat, lng);
             
-            // Update delivery charges
+            // Update charges
             updateDeliveryCharges();
             
-            // Show location status
+            // Show status
             document.getElementById('locationStatus').classList.remove('hidden');
             document.getElementById('loadingOverlay').classList.add('hidden');
             
-            // Add dragend event for marker
+            // Add dragend event
             userMarker.on('dragend', function() {
                 const position = userMarker.getLatLng();
                 userLocation = { lat: position.lat, lng: position.lng };
@@ -1139,7 +1040,7 @@
             name: document.getElementById('takeaway-name').value,
             phone: document.getElementById('takeaway-phone').value,
             pickupLocation: 'Prime Square, Omaxe City 1, Indore',
-            timings: '6:00 PM - 10:00 PM',
+            timings: '5:45 PM - 10:30 PM',
             deliveryMode: 'takeaway'
         };
     }
@@ -1296,14 +1197,12 @@
             for (const fieldId of requiredFields) {
                 const field = document.getElementById(fieldId);
                 if (!field.value.trim()) {
-                    field.classList.add('shake', 'border-red-500');
-                    setTimeout(() => field.classList.remove('shake'), 500);
+                    field.classList.add('border-red-500');
+                    setTimeout(() => field.classList.remove('border-red-500'), 500);
                     if (isValid) {
                         field.scrollIntoView({ behavior: 'smooth', block: 'center' });
                         isValid = false;
                     }
-                } else {
-                    field.classList.remove('border-red-500');
                 }
             }
             
@@ -1344,8 +1243,6 @@
                 return false;
             }
             
-            document.getElementById('takeaway-name').classList.remove('border-red-500');
-            document.getElementById('takeaway-phone').classList.remove('border-red-500');
             return true;
         }
         
@@ -1357,7 +1254,7 @@
         deliveryMode = 'delivery';
         
         // Update UI
-        document.getElementById('delivery-option').classList.add('border-blue-500', 'bg-blue-50');
+        document.getElementById('delivery-option').classList.add('border-indigo-500', 'bg-indigo-50');
         document.getElementById('delivery-option').classList.remove('border-gray-200');
         document.getElementById('takeaway-option').classList.add('border-gray-200');
         document.getElementById('takeaway-option').classList.remove('border-green-500', 'bg-green-50');
@@ -1370,7 +1267,7 @@
         document.getElementById('deliveryChargesCard').classList.add('hidden');
         document.getElementById('takeawayActionCard').classList.add('hidden');
         
-        // Ensure map is visible and resized
+        // Ensure map is visible
         setTimeout(() => {
             if (map) {
                 map.invalidateSize();
@@ -1389,7 +1286,7 @@
         document.getElementById('takeaway-option').classList.add('border-green-500', 'bg-green-50');
         document.getElementById('takeaway-option').classList.remove('border-gray-200');
         document.getElementById('delivery-option').classList.add('border-gray-200');
-        document.getElementById('delivery-option').classList.remove('border-blue-500', 'bg-blue-50');
+        document.getElementById('delivery-option').classList.remove('border-indigo-500', 'bg-indigo-50');
         
         // Hide delivery form, show takeaway form
         document.getElementById('address-form-section').classList.add('hidden');
