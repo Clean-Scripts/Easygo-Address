@@ -134,9 +134,29 @@
             10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
             20%, 40%, 60%, 80% { transform: translateX(5px); }
         }
+        
+        /* Empty cart overlay */
+        #emptyCartOverlay {
+            transition: all 0.3s ease;
+        }
     </style>
 </head>
 <body class="banner-bg">
+    
+    <!-- Empty Cart Overlay -->
+    <div id="emptyCartOverlay" class="fixed inset-0 bg-black bg-opacity-90 flex items-center justify-center z-50 hidden">
+        <div class="bg-white p-10 rounded-2xl shadow-2xl text-center max-w-md mx-4">
+            <div class="text-6xl mb-6">🛒</div>
+            <h2 class="text-2xl font-bold text-gray-800 mb-4">Your Cart is Empty</h2>
+            <p class="text-gray-600 mb-6">You need to add items to your cart before proceeding to address details.</p>
+            <p class="text-sm text-gray-500 mb-8">Redirecting to menu in <span id="countdown">5</span> seconds...</p>
+            <a href="https://clean-scripts.github.io/Easygo-Menu/" 
+               class="inline-flex items-center gap-3 px-8 py-4 bg-gradient-to-r from-blue-500 to-purple-600 text-white font-bold rounded-xl hover:opacity-90 transition">
+                <i class="fas fa-shopping-cart"></i>
+                Go to Menu Now
+            </a>
+        </div>
+    </div>
     
     <!-- Content Overlay -->
     <div class="content-overlay">
@@ -509,7 +529,7 @@
                             </div>
                         </div>
                         
-                        <div id="map" class="map-container"></div>
+                        <div id="map"></div>
                         
                         <!-- Location Link -->
                         <div id="locationLinkContainer" class="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-xl hidden">
@@ -686,6 +706,114 @@
         
         // Restaurant location
         const primeSquareLocation = [22.7767737, 75.9605483];
+        
+        // ====== NEW FUNCTION: CHECK IF CART IS EMPTY ======
+        function checkCartEmpty() {
+            try {
+                const cart = JSON.parse(localStorage.getItem('easygo-cart') || '[]');
+                const cartTotal = parseFloat(localStorage.getItem('easygo-cart-items-total') || '0');
+                
+                console.log("Cart check:", cart.length, "items, total:", cartTotal);
+                
+                if (cart.length === 0 || cartTotal <= 0) {
+                    // Show empty cart overlay
+                    document.getElementById('emptyCartOverlay').classList.remove('hidden');
+                    
+                    // Start countdown
+                    let seconds = 5;
+                    const countdownElement = document.getElementById('countdown');
+                    countdownElement.textContent = seconds;
+                    
+                    const countdown = setInterval(() => {
+                        seconds--;
+                        countdownElement.textContent = seconds;
+                        
+                        if (seconds <= 0) {
+                            clearInterval(countdown);
+                            // Redirect to menu page
+                            window.location.href = 'https://clean-scripts.github.io/Easygo-Menu/';
+                        }
+                    }, 1000);
+                    
+                    return true;
+                }
+                
+                return false;
+            } catch (error) {
+                console.error("Error checking cart:", error);
+                // If there's an error, assume cart is empty and redirect
+                window.location.href = 'https://clean-scripts.github.io/Easygo-Menu/';
+                return true;
+            }
+        }
+        
+        // ====== MODIFIED: Initialize on load ======
+        document.addEventListener('DOMContentLoaded', function() {
+            // First, check if cart is empty
+            if (checkCartEmpty()) {
+                return; // Stop execution if cart is empty
+            }
+            
+            // Only proceed if cart has items
+            initMap();
+            loadCartTotal();
+            switchToDelivery();
+            
+            // Pincode lookup
+            document.getElementById('pincode').addEventListener('input', function() {
+                const pincode = this.value;
+                if (pincode.length === 6) {
+                    document.getElementById('city').value = "Indore";
+                    document.getElementById('state').value = "Madhya Pradesh";
+                }
+            });
+            
+            // Event listeners
+            document.getElementById('getLocationBtn').addEventListener('click', getCurrentLocation);
+            document.getElementById('useCurrentLocationBtn').addEventListener('click', getCurrentLocation);
+            
+            document.getElementById('manualLocationBtn').addEventListener('click', function() {
+                if (deliveryMode === 'takeaway') return;
+                if (!validateForm()) return;
+                alert('Click on the map to set your delivery location');
+                map.once('click', function(e) {
+                    setUserLocation(e.latlng.lat, e.latlng.lng);
+                });
+            });
+            
+            // Copy location link
+            document.getElementById('copyLinkBtn').addEventListener('click', function() {
+                navigator.clipboard.writeText(googleMapsLink);
+                this.innerHTML = '<i class="fas fa-check"></i> Copied!';
+                this.classList.add('bg-green-500');
+                setTimeout(() => {
+                    this.innerHTML = '<i class="fas fa-copy"></i>';
+                    this.classList.remove('bg-green-500');
+                    this.classList.add('bg-blue-500');
+                }, 2000);
+            });
+            
+            // Proceed to payment (delivery)
+            document.getElementById('proceedToPaymentBtn').addEventListener('click', function() {
+                if (!validateForm()) return;
+                if (deliveryMode === 'delivery' && !userLocation) {
+                    alert('Please set your delivery location first');
+                    return;
+                }
+                window.location.href = 'https://clean-scripts.github.io/Easygo-Payment/';
+            });
+            
+            // Proceed to payment (takeaway)
+            document.getElementById('proceedToPaymentTakeawayBtn').addEventListener('click', function() {
+                if (!validateForm()) return;
+                window.location.href = 'https://clean-scripts.github.io/Easygo-Payment/';
+            });
+            
+            // Switch to delivery from takeaway
+            document.getElementById('switchToDeliveryBtn').addEventListener('click', switchToDelivery);
+        });
+        
+        // ====== EXISTING FUNCTIONS ======
         
         // Initialize map
         function initMap(lat = primeSquareLocation[0], lng = primeSquareLocation[1]) {
@@ -1009,66 +1137,6 @@
             const cartTotal = localStorage.getItem('easygo-cart-items-total') || '0';
             document.getElementById('cart-total-badge').textContent = `₹${cartTotal}`;
         }
-        
-        // Initialize on load
-        document.addEventListener('DOMContentLoaded', function() {
-            initMap();
-            loadCartTotal();
-            switchToDelivery();
-            
-            // Pincode lookup
-            document.getElementById('pincode').addEventListener('input', function() {
-                const pincode = this.value;
-                if (pincode.length === 6) {
-                    document.getElementById('city').value = "Indore";
-                    document.getElementById('state').value = "Madhya Pradesh";
-                }
-            });
-            
-            // Event listeners
-            document.getElementById('getLocationBtn').addEventListener('click', getCurrentLocation);
-            document.getElementById('useCurrentLocationBtn').addEventListener('click', getCurrentLocation);
-            
-            document.getElementById('manualLocationBtn').addEventListener('click', function() {
-                if (deliveryMode === 'takeaway') return;
-                if (!validateForm()) return;
-                alert('Click on the map to set your delivery location');
-                map.once('click', function(e) {
-                    setUserLocation(e.latlng.lat, e.latlng.lng);
-                });
-            });
-            
-            // Copy location link
-            document.getElementById('copyLinkBtn').addEventListener('click', function() {
-                navigator.clipboard.writeText(googleMapsLink);
-                this.innerHTML = '<i class="fas fa-check"></i> Copied!';
-                this.classList.add('bg-green-500');
-                setTimeout(() => {
-                    this.innerHTML = '<i class="fas fa-copy"></i>';
-                    this.classList.remove('bg-green-500');
-                    this.classList.add('bg-blue-500');
-                }, 2000);
-            });
-            
-            // Proceed to payment (delivery)
-            document.getElementById('proceedToPaymentBtn').addEventListener('click', function() {
-                if (!validateForm()) return;
-                if (deliveryMode === 'delivery' && !userLocation) {
-                    alert('Please set your delivery location first');
-                    return;
-                }
-                window.location.href = 'https://clean-scripts.github.io/Easygo-Payment/';
-            });
-            
-            // Proceed to payment (takeaway)
-            document.getElementById('proceedToPaymentTakeawayBtn').addEventListener('click', function() {
-                if (!validateForm()) return;
-                window.location.href = 'https://clean-scripts.github.io/Easygo-Payment/';
-            });
-            
-            // Switch to delivery from takeaway
-            document.getElementById('switchToDeliveryBtn').addEventListener('click', switchToDelivery);
-        });
     </script>
 </body>
 </html>
