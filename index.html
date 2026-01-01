@@ -662,28 +662,36 @@
             </div>
             
             <!-- Footer -->
-            <footer class="mt-12 py-8 border-t border-white/20">
-                <div class="flex flex-col md:flex-row justify-between items-center gap-6">
-                    <div class="flex items-center gap-4">
+    <footer class="bg-gray-900 text-white py-8">
+        <div class="max-w-6xl mx-auto px-4">
+            <div class="flex flex-col md:flex-row justify-between items-center">
+                <div class="mb-6 md:mb-0">
+                    <div class="flex items-center">
                         <img src="https://raw.githubusercontent.com/Clean-Scripts/EasyGo-Expense-Tracker/refs/heads/main/logo.png" 
-                             class="h-12 w-12 rounded-full border-2 border-white">
+                             class="h-12 w-12 rounded-full bg-white p-1 mr-3">
                         <div>
-                            <h3 class="text-lg font-bold text-white">Easy Go</h3>
-                            <p class="text-white/70 text-sm">Freshness & Speed Delivered</p>
+                            <h2 class="text-xl font-bold">Easy Go</h2>
+                            <p class="text-gray-400 text-sm">Freshness & Speed Delivered</p>
                         </div>
                     </div>
-                    
-                    <div class="text-center">
-                        <p class="text-white/70 text-sm mb-2">© 2024 Easy Go • All Rights Reserved</p>
-                        <p class="text-white/50 text-xs">MSME | FSSAI | GST Registered • Serving daily from 5:45 PM to 10:30 PM</p>
-                    </div>
-                    
-                    <a href="https://clean-scripts.github.io/Easygo-Menu/" 
-                       class="px-6 py-3 bg-white text-blue-600 font-bold rounded-xl hover:bg-gray-100 transition">
-                        View Menu
-                    </a>
                 </div>
-            </footer>
+                
+                <div class="text-center md:text-right">
+                    <p class="text-gray-400 text-sm mb-2">
+                        © 2024 Easy Go + All Rights Reserved
+                    </p>
+                    <p class="text-gray-500 text-xs">
+                        Serving daily from 5:00 PM to 10:00 PM
+                    </p>
+                    <div class="mt-4">
+                        <a href="#" class="text-gray-400 hover:text-white text-sm mr-4">View Menu</a>
+                        <a href="#" class="text-gray-400 hover:text-white text-sm mr-4">Privacy Policy</a>
+                        <a href="#" class="text-gray-400 hover:text-white text-sm">Terms & Conditions</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </footer>
         </div>
     </div>
     
@@ -696,270 +704,213 @@
         </div>
     </div>
 
-    <script>
-        // Global variables
-        let map;
-        let userMarker;
-        let userLocation = null;
-        let deliveryMode = 'delivery';
-        let googleMapsLink = "";
-        
-        // Restaurant location
-        const primeSquareLocation = [22.7767737, 75.9605483];
-        
-        // ====== NEW FUNCTION: CHECK IF CART IS EMPTY ======
-        function checkCartEmpty() {
-            try {
-                const cart = JSON.parse(localStorage.getItem('easygo-cart') || '[]');
-                const cartTotal = parseFloat(localStorage.getItem('easygo-cart-items-total') || '0');
+<script>
+    // Global variables
+    let map;
+    let userMarker;
+    let userLocation = null;
+    let deliveryMode = 'delivery';
+    let googleMapsLink = "";
+    
+    // Restaurant location
+    const primeSquareLocation = [22.7767737, 75.9605483];
+    
+    // ====== NEW FUNCTION: CHECK IF CART IS EMPTY ======
+    function checkCartEmpty() {
+        try {
+            const cart = JSON.parse(localStorage.getItem('easygo-cart') || '[]');
+            const cartTotal = parseFloat(localStorage.getItem('easygo-cart-items-total') || '0');
+            
+            console.log("Cart check:", cart.length, "items, total:", cartTotal);
+            
+            if (cart.length === 0 || cartTotal <= 0) {
+                // Show empty cart overlay
+                document.getElementById('emptyCartOverlay').classList.remove('hidden');
                 
-                console.log("Cart check:", cart.length, "items, total:", cartTotal);
+                // Start countdown
+                let seconds = 5;
+                const countdownElement = document.getElementById('countdown');
+                countdownElement.textContent = seconds;
                 
-                if (cart.length === 0 || cartTotal <= 0) {
-                    // Show empty cart overlay
-                    document.getElementById('emptyCartOverlay').classList.remove('hidden');
-                    
-                    // Start countdown
-                    let seconds = 5;
-                    const countdownElement = document.getElementById('countdown');
+                const countdown = setInterval(() => {
+                    seconds--;
                     countdownElement.textContent = seconds;
                     
-                    const countdown = setInterval(() => {
-                        seconds--;
-                        countdownElement.textContent = seconds;
-                        
-                        if (seconds <= 0) {
-                            clearInterval(countdown);
-                            // Redirect to menu page
-                            window.location.href = 'https://clean-scripts.github.io/Easygo-Menu/';
-                        }
-                    }, 1000);
-                    
-                    return true;
-                }
+                    if (seconds <= 0) {
+                        clearInterval(countdown);
+                        // Redirect to menu page
+                        window.location.href = 'https://clean-scripts.github.io/Easygo-Menu/';
+                    }
+                }, 1000);
                 
-                return false;
-            } catch (error) {
-                console.error("Error checking cart:", error);
-                // If there's an error, assume cart is empty and redirect
-                window.location.href = 'https://clean-scripts.github.io/Easygo-Menu/';
                 return true;
             }
+            
+            return false;
+        } catch (error) {
+            console.error("Error checking cart:", error);
+            // If there's an error, assume cart is empty and redirect
+            window.location.href = 'https://clean-scripts.github.io/Easygo-Menu/';
+            return true;
+        }
+    }
+    
+    // ====== MODIFIED: Initialize on load ======
+    document.addEventListener('DOMContentLoaded', function() {
+        // First, check if cart is empty
+        if (checkCartEmpty()) {
+            return; // Stop execution if cart is empty
         }
         
-        // ====== MODIFIED: Initialize on load ======
-        document.addEventListener('DOMContentLoaded', function() {
-            // First, check if cart is empty
-            if (checkCartEmpty()) {
-                return; // Stop execution if cart is empty
-            }
-            
-            // Only proceed if cart has items
+        // Only proceed if cart has items
+        // Initialize map FIRST with a small delay
+        setTimeout(() => {
             initMap();
-            loadCartTotal();
-            switchToDelivery();
-            
-            // Pincode lookup
-            document.getElementById('pincode').addEventListener('input', function() {
-                const pincode = this.value;
-                if (pincode.length === 6) {
-                    document.getElementById('city').value = "Indore";
-                    document.getElementById('state').value = "Madhya Pradesh";
-                }
-            });
-            
-            // Event listeners
-            document.getElementById('getLocationBtn').addEventListener('click', getCurrentLocation);
-            document.getElementById('useCurrentLocationBtn').addEventListener('click', getCurrentLocation);
-            
-            document.getElementById('manualLocationBtn').addEventListener('click', function() {
-                if (deliveryMode === 'takeaway') return;
-                if (!validateForm()) return;
-                alert('Click on the map to set your delivery location');
-                map.once('click', function(e) {
-                    setUserLocation(e.latlng.lat, e.latlng.lng);
-                });
-            });
-            
-            // Copy location link
-            document.getElementById('copyLinkBtn').addEventListener('click', function() {
-                navigator.clipboard.writeText(googleMapsLink);
-                this.innerHTML = '<i class="fas fa-check"></i> Copied!';
-                this.classList.add('bg-green-500');
-                setTimeout(() => {
-                    this.innerHTML = '<i class="fas fa-copy"></i>';
-                    this.classList.remove('bg-green-500');
-                    this.classList.add('bg-blue-500');
-                }, 2000);
-            });
-            
-            // Proceed to payment (delivery)
-            document.getElementById('proceedToPaymentBtn').addEventListener('click', function() {
-                if (!validateForm()) return;
-                if (deliveryMode === 'delivery' && !userLocation) {
-                    alert('Please set your delivery location first');
-                    return;
-                }
-                window.location.href = 'https://clean-scripts.github.io/Easygo-Payment/';
-            });
-            
-            // Proceed to payment (takeaway)
-            document.getElementById('proceedToPaymentTakeawayBtn').addEventListener('click', function() {
-                if (!validateForm()) return;
-                window.location.href = 'https://clean-scripts.github.io/Easygo-Payment/';
-            });
-            
-            // Switch to delivery from takeaway
-            document.getElementById('switchToDeliveryBtn').addEventListener('click', switchToDelivery);
+        }, 300);
+        
+        loadCartTotal();
+        switchToDelivery();
+        
+        // Pincode lookup
+        document.getElementById('pincode').addEventListener('input', function() {
+            const pincode = this.value;
+            if (pincode.length === 6) {
+                document.getElementById('city').value = "Indore";
+                document.getElementById('state').value = "Madhya Pradesh";
+            }
         });
         
-        // ====== EXISTING FUNCTIONS ======
+        // Event listeners
+        document.getElementById('getLocationBtn').addEventListener('click', getCurrentLocation);
+        document.getElementById('useCurrentLocationBtn').addEventListener('click', getCurrentLocation);
         
-        // Initialize map
-        function initMap(lat = primeSquareLocation[0], lng = primeSquareLocation[1]) {
-            if (!map) {
-                map = L.map('map').setView([lat, lng], 14);
-                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                    attribution: '© OpenStreetMap'
-                }).addTo(map);
-                
-                // Add restaurant marker
-                L.marker(primeSquareLocation).addTo(map)
-                    .bindPopup('<b>Prime Square, EasyGo Restaurant</b>')
-                    .openPopup();
-                    
-                // Add delivery range circles
-                L.circle(primeSquareLocation, {
-                    color: '#3b82f6',
-                    fillColor: '#3b82f6',
-                    fillOpacity: 0.1,
-                    radius: 4000
-                }).addTo(map).bindPopup('4km delivery zone');
-                
-                L.circle(primeSquareLocation, {
-                    color: '#f59e0b',
-                    fillColor: '#f59e0b',
-                    fillOpacity: 0.05,
-                    radius: 10000
-                }).addTo(map).bindPopup('10km delivery range');
+        document.getElementById('manualLocationBtn').addEventListener('click', function() {
+            if (deliveryMode === 'takeaway') return;
+            if (!validateForm()) return;
+            alert('Click on the map to set your delivery location');
+            map.once('click', function(e) {
+                setUserLocation(e.latlng.lat, e.latlng.lng);
+            });
+        });
+        
+        // Copy location link
+        document.getElementById('copyLinkBtn').addEventListener('click', function() {
+            navigator.clipboard.writeText(googleMapsLink);
+            this.innerHTML = '<i class="fas fa-check"></i> Copied!';
+            this.classList.add('bg-green-500');
+            setTimeout(() => {
+                this.innerHTML = '<i class="fas fa-copy"></i>';
+                this.classList.remove('bg-green-500');
+                this.classList.add('bg-blue-500');
+            }, 2000);
+        });
+        
+        // Proceed to payment (delivery)
+        document.getElementById('proceedToPaymentBtn').addEventListener('click', function() {
+            if (!validateForm()) return;
+            if (deliveryMode === 'delivery' && !userLocation) {
+                alert('Please set your delivery location first');
+                return;
             }
-        }
+            window.location.href = 'https://clean-scripts.github.io/Easygo-Payment/';
+        });
         
-        // Calculate distance
-        function calculateDistance(lat1, lon1, lat2, lon2) {
-            const R = 6371;
-            const dLat = (lat2 - lat1) * Math.PI / 180;
-            const dLon = (lon2 - lon1) * Math.PI / 180;
-            const a = 
-                Math.sin(dLat/2) * Math.sin(dLat/2) +
-                Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * 
-                Math.sin(dLon/2) * Math.sin(dLon/2);
-            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-            return R * c;
-        }
+        // Proceed to payment (takeaway)
+        document.getElementById('proceedToPaymentTakeawayBtn').addEventListener('click', function() {
+            if (!validateForm()) return;
+            window.location.href = 'https://clean-scripts.github.io/Easygo-Payment/';
+        });
         
-        // Calculate delivery charges
-        function calculateDeliveryCharges(distance) {
-            const cartTotal = parseFloat(localStorage.getItem('easygo-cart-items-total')) || 0;
-            const freeDeliveryEligible = cartTotal > 199;
-            
-            if (distance > 10) {
-                return { beyondRange: true, distance: distance.toFixed(2) };
-            }
-            
-            let baseCharge = 0;
-            
-            if (distance <= 4) {
-                if (freeDeliveryEligible) {
-                    baseCharge = 0;
-                } else {
-                    baseCharge = Math.ceil(distance * 2);
-                }
-            } else if (distance <= 10) {
-                const extraKm = distance - 4;
-                baseCharge = Math.ceil(4 * 2 + extraKm * 3);
-            }
-            
-            const gst = baseCharge * 0.18;
-            const totalCharge = baseCharge + gst;
-            
-            return {
-                distance: distance.toFixed(2),
-                baseCharge: baseCharge,
-                gst: gst.toFixed(2),
-                totalCharge: totalCharge.toFixed(2),
-                freeDelivery: freeDeliveryEligible && distance <= 4,
-                beyondRange: false
-            };
-        }
-        
-        // Generate Google Maps link
-        function generateGoogleMapsLink(lat, lng) {
-            return `https://www.google.com/maps?q=${lat},${lng}`;
-        }
-        
-        // Update delivery charges display
-        function updateDeliveryCharges() {
-            if (!userLocation) return;
-            
-            const distance = calculateDistance(
-                primeSquareLocation[0], primeSquareLocation[1],
-                userLocation.lat, userLocation.lng
-            );
-            
-            const charges = calculateDeliveryCharges(distance);
-            
-            if (charges.beyondRange) {
-                document.getElementById('rangeWarning').classList.remove('hidden');
-                document.getElementById('freeDeliveryOffer').classList.add('hidden');
-                document.getElementById('proceedToPaymentBtn').disabled = true;
-                document.getElementById('proceedToPaymentBtn').classList.add('opacity-50', 'cursor-not-allowed');
+        // Switch to delivery from takeaway
+        document.getElementById('switchToDeliveryBtn').addEventListener('click', switchToDelivery);
+    });
+    
+    // ====== FIXED MAP INITIALIZATION ======
+    function initMap(lat = primeSquareLocation[0], lng = primeSquareLocation[1]) {
+        try {
+            // Check if map container exists
+            const mapContainer = document.getElementById('map');
+            if (!mapContainer) {
+                console.error("Map container not found!");
                 return;
             }
             
-            document.getElementById('rangeWarning').classList.add('hidden');
-            document.getElementById('proceedToPaymentBtn').disabled = false;
-            document.getElementById('proceedToPaymentBtn').classList.remove('opacity-50', 'cursor-not-allowed');
-            
-            // Update UI
-            document.getElementById('distanceValue').textContent = `${charges.distance} km`;
-            document.getElementById('previewDistance').textContent = `${charges.distance} km`;
-            document.getElementById('baseFare').textContent = `₹${charges.baseCharge}`;
-            document.getElementById('gstValue').textContent = `₹${charges.gst}`;
-            document.getElementById('totalCharge').textContent = `₹${charges.totalCharge}`;
-            
-            if (charges.freeDelivery) {
-                document.getElementById('freeDeliveryOffer').classList.remove('hidden');
-            } else {
-                document.getElementById('freeDeliveryOffer').classList.add('hidden');
+            // Remove existing map if any
+            if (map) {
+                map.remove();
+                map = null;
             }
             
-            // Generate location link
-            googleMapsLink = generateGoogleMapsLink(userLocation.lat, userLocation.lng);
-            document.getElementById('locationLink').textContent = googleMapsLink;
-            document.getElementById('locationLink').href = googleMapsLink;
-            document.getElementById('locationLinkContainer').classList.remove('hidden');
-            document.getElementById('deliveryChargesCard').classList.remove('hidden');
+            // Initialize map with specified coordinates
+            map = L.map('map').setView([lat, lng], 14);
             
-            // Save delivery data
-            const deliveryData = {
-                mode: 'delivery',
-                distance: charges.distance,
-                charge: charges.totalCharge,
-                location: userLocation,
-                locationLink: googleMapsLink
-            };
-            localStorage.setItem('easygo-delivery', JSON.stringify(deliveryData));
+            // Add OpenStreetMap tiles
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '© OpenStreetMap contributors',
+                maxZoom: 19
+            }).addTo(map);
+            
+            // Add restaurant marker
+            L.marker(primeSquareLocation).addTo(map)
+                .bindPopup('<b>Prime Square, EasyGo Restaurant</b>')
+                .openPopup();
+                
+            // Add delivery range circles (only for visual reference)
+            L.circle(primeSquareLocation, {
+                color: '#3b82f6',
+                fillColor: '#3b82f6',
+                fillOpacity: 0.1,
+                radius: 4000,
+                weight: 2
+            }).addTo(map).bindPopup('4km delivery zone');
+            
+            L.circle(primeSquareLocation, {
+                color: '#f59e0b',
+                fillColor: '#f59e0b',
+                fillOpacity: 0.05,
+                radius: 10000,
+                weight: 1
+            }).addTo(map).bindPopup('10km delivery range');
+            
+            // Add click event for manual pin drop
+            map.on('click', function(e) {
+                if (deliveryMode === 'delivery') {
+                    setUserLocation(e.latlng.lat, e.latlng.lng);
+                }
+            });
+            
+            console.log("Map initialized successfully");
+            
+        } catch (error) {
+            console.error("Error initializing map:", error);
+            // Show fallback message
+            const mapContainer = document.getElementById('map');
+            if (mapContainer) {
+                mapContainer.innerHTML = `
+                    <div class="h-full flex flex-col items-center justify-center bg-gray-100 rounded-xl p-8">
+                        <div class="text-4xl mb-4">🗺️</div>
+                        <p class="font-bold text-gray-700">Map Loading Error</p>
+                        <p class="text-gray-600 text-sm mt-2">Please refresh the page or check your internet connection</p>
+                        <button onclick="initMap()" class="mt-4 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600">
+                            Retry Loading Map
+                        </button>
+                    </div>
+                `;
+            }
         }
-        
-        // Set user location on map
-        function setUserLocation(lat, lng) {
+    }
+    
+    // ====== FIXED SET USER LOCATION ======
+    function setUserLocation(lat, lng) {
+        try {
             userLocation = { lat, lng };
             
+            // Remove existing user marker
             if (userMarker) {
                 map.removeLayer(userMarker);
             }
             
+            // Create new user marker
             userMarker = L.marker([lat, lng], { 
                 draggable: true,
                 icon: L.divIcon({
@@ -970,173 +921,294 @@
                 })
             }).addTo(map);
             
+            // Center map on user location
             map.setView([lat, lng], 16);
             
+            // Update delivery charges
+            updateDeliveryCharges();
+            
+            // Show location status
+            document.getElementById('locationStatus').classList.remove('hidden');
+            document.getElementById('loadingOverlay').classList.add('hidden');
+            
+            // Add dragend event for marker
             userMarker.on('dragend', function() {
                 const position = userMarker.getLatLng();
                 userLocation = { lat: position.lat, lng: position.lng };
                 updateDeliveryCharges();
             });
             
-            document.getElementById('locationStatus').classList.remove('hidden');
-            updateDeliveryCharges();
+            console.log("User location set:", { lat, lng });
+            
+        } catch (error) {
+            console.error("Error setting user location:", error);
+            alert("Error setting location. Please try again.");
             document.getElementById('loadingOverlay').classList.add('hidden');
         }
+    }
+    
+    // Calculate distance
+    function calculateDistance(lat1, lon1, lat2, lon2) {
+        const R = 6371;
+        const dLat = (lat2 - lat1) * Math.PI / 180;
+        const dLon = (lon2 - lon1) * Math.PI / 180;
+        const a = 
+            Math.sin(dLat/2) * Math.sin(dLat/2) +
+            Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * 
+            Math.sin(dLon/2) * Math.sin(dLon/2);
+        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+        return R * c;
+    }
+    
+    // Calculate delivery charges
+    function calculateDeliveryCharges(distance) {
+        const cartTotal = parseFloat(localStorage.getItem('easygo-cart-items-total')) || 0;
+        const freeDeliveryEligible = cartTotal > 199;
         
-        // Get current location
-        function getCurrentLocation() {
-            if (deliveryMode === 'takeaway') {
-                alert("Takeaway doesn't require location. Please proceed with payment.");
-                return;
-            }
-            
-            if (!validateForm()) return;
-            
-            document.getElementById('loadingOverlay').classList.remove('hidden');
-            
-            if (navigator.geolocation) {
-                navigator.geolocation.getCurrentPosition(
-                    (position) => {
-                        setUserLocation(position.coords.latitude, position.coords.longitude);
-                    },
-                    () => {
-                        document.getElementById('loadingOverlay').classList.add('hidden');
-                        alert("Unable to get location. Please use manual pin drop.");
-                    }
-                );
-            }
+        if (distance > 10) {
+            return { beyondRange: true, distance: distance.toFixed(2) };
         }
         
-        // Validate form based on mode
-        function validateForm() {
-            if (deliveryMode === 'delivery') {
-                const requiredFields = ['name', 'phone', 'addressType', 'houseNumber', 'locality', 'street', 'pincode'];
-                
-                for (const fieldId of requiredFields) {
-                    const field = document.getElementById(fieldId);
-                    if (!field.value.trim()) {
-                        field.classList.add('shake', 'border-red-500');
-                        setTimeout(() => field.classList.remove('shake'), 500);
-                        field.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                        alert('Please fill all required delivery address fields');
-                        return false;
-                    }
-                }
-                
-                const phone = document.getElementById('phone').value;
-                if (!/^\d{10}$/.test(phone)) {
-                    alert('Please enter valid 10-digit phone number');
-                    return false;
-                }
-                
-                const pincode = document.getElementById('pincode').value;
-                if (!/^\d{6}$/.test(pincode)) {
-                    alert('Please enter valid 6-digit pincode');
-                    return false;
-                }
-                
-                // Save delivery address
-                const address = {
-                    name: document.getElementById('name').value,
-                    phone: document.getElementById('phone').value,
-                    addressType: document.getElementById('addressType').value,
-                    houseNumber: document.getElementById('houseNumber').value,
-                    floorNumber: document.getElementById('floorNumber').value,
-                    locality: document.getElementById('locality').value,
-                    street: document.getElementById('street').value,
-                    pincode: document.getElementById('pincode').value,
-                    city: document.getElementById('city').value || 'Indore',
-                    state: document.getElementById('state').value || 'Madhya Pradesh',
-                    deliveryMode: 'delivery'
-                };
-                localStorage.setItem('easygo-address', JSON.stringify(address));
-                
-            } else if (deliveryMode === 'takeaway') {
-                const name = document.getElementById('takeaway-name').value;
-                const phone = document.getElementById('takeaway-phone').value;
-                
-                if (!name.trim()) {
-                    alert('Please enter your name for takeaway');
-                    return false;
-                }
-                
-                if (!/^\d{10}$/.test(phone)) {
-                    alert('Please enter valid 10-digit phone number for OTP verification');
-                    return false;
-                }
-                
-                // Save takeaway details
-                const takeawayData = {
-                    name: name,
-                    phone: phone,
-                    pickupLocation: 'Prime Square, Omaxe City 1, Indore',
-                    timings: '6:00 PM - 10:00 PM',
-                    deliveryMode: 'takeaway'
-                };
-                localStorage.setItem('easygo-address', JSON.stringify(takeawayData));
-                localStorage.setItem('easygo-delivery', JSON.stringify({
-                    mode: 'takeaway',
-                    charge: 0
-                }));
+        let baseCharge = 0;
+        
+        if (distance <= 4) {
+            if (freeDeliveryEligible) {
+                baseCharge = 0;
+            } else {
+                baseCharge = Math.ceil(distance * 2);
             }
-            
-            return true;
+        } else if (distance <= 10) {
+            const extraKm = distance - 4;
+            baseCharge = Math.ceil(4 * 2 + extraKm * 3);
         }
         
-        // Switch to delivery mode
-        function switchToDelivery() {
-            deliveryMode = 'delivery';
-            
-            // Update UI
-            document.getElementById('delivery-option').classList.add('border-blue-500', 'bg-blue-50');
-            document.getElementById('delivery-option').classList.remove('border-gray-200');
-            document.getElementById('takeaway-option').classList.add('border-gray-200');
-            document.getElementById('takeaway-option').classList.remove('border-green-500', 'bg-green-50');
-            
-            // Show delivery form, hide takeaway form
-            document.getElementById('address-form-section').classList.remove('hidden');
-            document.getElementById('takeaway-form-section').classList.add('hidden');
-            document.getElementById('location-section').classList.remove('hidden');
-            document.getElementById('map-section').classList.remove('hidden');
-            document.getElementById('deliveryChargesCard').classList.add('hidden');
-            document.getElementById('takeawayActionCard').classList.add('hidden');
-            
-            // Initialize map if not already
-            if (!map) {
-                initMap();
-            }
+        const gst = baseCharge * 0.18;
+        const totalCharge = baseCharge + gst;
+        
+        return {
+            distance: distance.toFixed(2),
+            baseCharge: baseCharge,
+            gst: gst.toFixed(2),
+            totalCharge: totalCharge.toFixed(2),
+            freeDelivery: freeDeliveryEligible && distance <= 4,
+            beyondRange: false
+        };
+    }
+    
+    // Generate Google Maps link
+    function generateGoogleMapsLink(lat, lng) {
+        return `https://www.google.com/maps?q=${lat},${lng}`;
+    }
+    
+    // Update delivery charges display
+    function updateDeliveryCharges() {
+        if (!userLocation) return;
+        
+        const distance = calculateDistance(
+            primeSquareLocation[0], primeSquareLocation[1],
+            userLocation.lat, userLocation.lng
+        );
+        
+        const charges = calculateDeliveryCharges(distance);
+        
+        if (charges.beyondRange) {
+            document.getElementById('rangeWarning').classList.remove('hidden');
+            document.getElementById('freeDeliveryOffer').classList.add('hidden');
+            document.getElementById('proceedToPaymentBtn').disabled = true;
+            document.getElementById('proceedToPaymentBtn').classList.add('opacity-50', 'cursor-not-allowed');
+            return;
         }
         
-        // Switch to takeaway mode
-        function switchToTakeaway() {
-            deliveryMode = 'takeaway';
+        document.getElementById('rangeWarning').classList.add('hidden');
+        document.getElementById('proceedToPaymentBtn').disabled = false;
+        document.getElementById('proceedToPaymentBtn').classList.remove('opacity-50', 'cursor-not-allowed');
+        
+        // Update UI
+        document.getElementById('distanceValue').textContent = `${charges.distance} km`;
+        document.getElementById('previewDistance').textContent = `${charges.distance} km`;
+        document.getElementById('baseFare').textContent = `₹${charges.baseCharge}`;
+        document.getElementById('gstValue').textContent = `₹${charges.gst}`;
+        document.getElementById('totalCharge').textContent = `₹${charges.totalCharge}`;
+        
+        if (charges.freeDelivery) {
+            document.getElementById('freeDeliveryOffer').classList.remove('hidden');
+        } else {
+            document.getElementById('freeDeliveryOffer').classList.add('hidden');
+        }
+        
+        // Generate location link
+        googleMapsLink = generateGoogleMapsLink(userLocation.lat, userLocation.lng);
+        document.getElementById('locationLink').textContent = googleMapsLink;
+        document.getElementById('locationLink').href = googleMapsLink;
+        document.getElementById('locationLinkContainer').classList.remove('hidden');
+        document.getElementById('deliveryChargesCard').classList.remove('hidden');
+        
+        // Save delivery data
+        const deliveryData = {
+            mode: 'delivery',
+            distance: charges.distance,
+            charge: charges.totalCharge,
+            location: userLocation,
+            locationLink: googleMapsLink
+        };
+        localStorage.setItem('easygo-delivery', JSON.stringify(deliveryData));
+    }
+    
+    // Get current location
+    function getCurrentLocation() {
+        if (deliveryMode === 'takeaway') {
+            alert("Takeaway doesn't require location. Please proceed with payment.");
+            return;
+        }
+        
+        if (!validateForm()) return;
+        
+        document.getElementById('loadingOverlay').classList.remove('hidden');
+        
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(
+                (position) => {
+                    setUserLocation(position.coords.latitude, position.coords.longitude);
+                },
+                () => {
+                    document.getElementById('loadingOverlay').classList.add('hidden');
+                    alert("Unable to get location. Please use manual pin drop.");
+                }
+            );
+        }
+    }
+    
+    // Validate form based on mode
+    function validateForm() {
+        if (deliveryMode === 'delivery') {
+            const requiredFields = ['name', 'phone', 'addressType', 'houseNumber', 'locality', 'street', 'pincode'];
             
-            // Update UI
-            document.getElementById('takeaway-option').classList.add('border-green-500', 'bg-green-50');
-            document.getElementById('takeaway-option').classList.remove('border-gray-200');
-            document.getElementById('delivery-option').classList.add('border-gray-200');
-            document.getElementById('delivery-option').classList.remove('border-blue-500', 'bg-blue-50');
+            for (const fieldId of requiredFields) {
+                const field = document.getElementById(fieldId);
+                if (!field.value.trim()) {
+                    field.classList.add('shake', 'border-red-500');
+                    setTimeout(() => field.classList.remove('shake'), 500);
+                    field.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    alert('Please fill all required delivery address fields');
+                    return false;
+                }
+            }
             
-            // Hide delivery form, show takeaway form
-            document.getElementById('address-form-section').classList.add('hidden');
-            document.getElementById('takeaway-form-section').classList.remove('hidden');
-            document.getElementById('location-section').classList.add('hidden');
-            document.getElementById('map-section').classList.add('hidden');
-            document.getElementById('deliveryChargesCard').classList.add('hidden');
-            document.getElementById('takeawayActionCard').classList.remove('hidden');
+            const phone = document.getElementById('phone').value;
+            if (!/^\d{10}$/.test(phone)) {
+                alert('Please enter valid 10-digit phone number');
+                return false;
+            }
             
-            // Save takeaway data
+            const pincode = document.getElementById('pincode').value;
+            if (!/^\d{6}$/.test(pincode)) {
+                alert('Please enter valid 6-digit pincode');
+                return false;
+            }
+            
+            // Save delivery address
+            const address = {
+                name: document.getElementById('name').value,
+                phone: document.getElementById('phone').value,
+                addressType: document.getElementById('addressType').value,
+                houseNumber: document.getElementById('houseNumber').value,
+                floorNumber: document.getElementById('floorNumber').value,
+                locality: document.getElementById('locality').value,
+                street: document.getElementById('street').value,
+                pincode: document.getElementById('pincode').value,
+                city: document.getElementById('city').value || 'Indore',
+                state: document.getElementById('state').value || 'Madhya Pradesh',
+                deliveryMode: 'delivery'
+            };
+            localStorage.setItem('easygo-address', JSON.stringify(address));
+            
+        } else if (deliveryMode === 'takeaway') {
+            const name = document.getElementById('takeaway-name').value;
+            const phone = document.getElementById('takeaway-phone').value;
+            
+            if (!name.trim()) {
+                alert('Please enter your name for takeaway');
+                return false;
+            }
+            
+            if (!/^\d{10}$/.test(phone)) {
+                alert('Please enter valid 10-digit phone number for OTP verification');
+                return false;
+            }
+            
+            // Save takeaway details
+            const takeawayData = {
+                name: name,
+                phone: phone,
+                pickupLocation: 'Prime Square, Omaxe City 1, Indore',
+                timings: '6:00 PM - 10:00 PM',
+                deliveryMode: 'takeaway'
+            };
+            localStorage.setItem('easygo-address', JSON.stringify(takeawayData));
             localStorage.setItem('easygo-delivery', JSON.stringify({
                 mode: 'takeaway',
                 charge: 0
             }));
         }
         
-        // Load cart total
-        function loadCartTotal() {
-            const cartTotal = localStorage.getItem('easygo-cart-items-total') || '0';
-            document.getElementById('cart-total-badge').textContent = `₹${cartTotal}`;
+        return true;
+    }
+    
+    // Switch to delivery mode
+    function switchToDelivery() {
+        deliveryMode = 'delivery';
+        
+        // Update UI
+        document.getElementById('delivery-option').classList.add('border-blue-500', 'bg-blue-50');
+        document.getElementById('delivery-option').classList.remove('border-gray-200');
+        document.getElementById('takeaway-option').classList.add('border-gray-200');
+        document.getElementById('takeaway-option').classList.remove('border-green-500', 'bg-green-50');
+        
+        // Show delivery form, hide takeaway form
+        document.getElementById('address-form-section').classList.remove('hidden');
+        document.getElementById('takeaway-form-section').classList.add('hidden');
+        document.getElementById('location-section').classList.remove('hidden');
+        document.getElementById('map-section').classList.remove('hidden');
+        document.getElementById('deliveryChargesCard').classList.add('hidden');
+        document.getElementById('takeawayActionCard').classList.add('hidden');
+        
+        // Initialize map if not already
+        if (!map) {
+            initMap();
         }
-    </script>
+    }
+    
+    // Switch to takeaway mode
+    function switchToTakeaway() {
+        deliveryMode = 'takeaway';
+        
+        // Update UI
+        document.getElementById('takeaway-option').classList.add('border-green-500', 'bg-green-50');
+        document.getElementById('takeaway-option').classList.remove('border-gray-200');
+        document.getElementById('delivery-option').classList.add('border-gray-200');
+        document.getElementById('delivery-option').classList.remove('border-blue-500', 'bg-blue-50');
+        
+        // Hide delivery form, show takeaway form
+        document.getElementById('address-form-section').classList.add('hidden');
+        document.getElementById('takeaway-form-section').classList.remove('hidden');
+        document.getElementById('location-section').classList.add('hidden');
+        document.getElementById('map-section').classList.add('hidden');
+        document.getElementById('deliveryChargesCard').classList.add('hidden');
+        document.getElementById('takeawayActionCard').classList.remove('hidden');
+        
+        // Save takeaway data
+        localStorage.setItem('easygo-delivery', JSON.stringify({
+            mode: 'takeaway',
+            charge: 0
+        }));
+    }
+    
+    // Load cart total
+    function loadCartTotal() {
+        const cartTotal = localStorage.getItem('easygo-cart-items-total') || '0';
+        document.getElementById('cart-total-badge').textContent = `₹${cartTotal}`;
+    }
+</script>
+    
 </body>
 </html>
