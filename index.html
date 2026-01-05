@@ -600,98 +600,150 @@
     let userMarker;
     let userLocation = null;
     let currentDeliveryMode = null;
-    let googleMapsLink = "";
     let database;
     let isFirebaseConnected = false;
+    let firebaseInitialized = false;
     
     // Restaurant location (Prime Square, Indore)
     const primeSquareLocation = [22.7767737, 75.9605483];
     
-    // ====== SIMPLIFIED FIREBASE INITIALIZATION ======
+    // Service Area Boundary (Indore approximate boundary)
+    const indoreServiceArea = [
+        [22.85, 75.70],  // Northwest
+        [22.85, 76.10],  // Northeast
+        [22.65, 76.10],  // Southeast
+        [22.65, 75.70]   // Southwest
+    ];
+    
+    // Special locations with predefined distances and charges
+    const specialLocations = [
+        {
+            name: "TaskUs Indore - Rangreza",
+            coords: [22.7500367, 75.9021075],
+            distance: 1,
+            charge: 20,
+            isSpecial: false
+        },
+        {
+            name: "Teleperformance Brilliant Sapphire",
+            coords: [22.7633039, 75.8814454],
+            distance: 1,
+            charge: 20,
+            isSpecial: false
+        },
+        {
+            name: "L.I.G. Square",
+            coords: [22.7336871, 75.8875409],
+            distance: 1,
+            charge: 30,
+            isSpecial: false
+        },
+        {
+            name: "Shree Vilas Palace (SPECIAL REQUEST)",
+            coords: [22.737, 75.895],
+            distance: 14,
+            charge: 40,
+            isSpecial: true,
+            specialMessage: "Special delivery available for orders above ₹199 with ₹40 delivery charge"
+        }
+    ];
+    
+    // ====== FIREBASE INITIALIZATION ======
     function initializeFirebase() {
         try {
             // Check if already initialized
-            if (typeof firebase === 'undefined') {
-                console.error("Firebase SDK not loaded");
-                return false;
+            if (firebase.apps.length === 0) {
+                const app = firebase.initializeApp(firebaseConfig);
+                database = firebase.database();
+                firebaseInitialized = true;
+                console.log("Firebase initialized successfully");
+            } else {
+                database = firebase.database();
+                firebaseInitialized = true;
+                console.log("Firebase already initialized");
             }
             
-            // Initialize Firebase
-            firebase.initializeApp(firebaseConfig);
-            database = firebase.database();
-            
-            console.log("Firebase initialized successfully");
-            
-            // Simple connection check
-            database.ref(".info/connected").on("value", function(snap) {
-                isFirebaseConnected = snap.val() === true;
-                if (isFirebaseConnected) {
-                    console.log("Firebase connected");
-                    document.getElementById('firebaseStatus').textContent = "✅ Connected";
-                    document.getElementById('firebaseStatus').className = "firebase-status bg-green-500 text-white";
+            // Monitor connection status
+            const connectedRef = database.ref(".info/connected");
+            connectedRef.on("value", function(snap) {
+                const statusElement = document.getElementById('firebaseStatus');
+                
+                if (snap.val() === true) {
+                    isFirebaseConnected = true;
+                    statusElement.textContent = "✅ Firebase Connected";
+                    statusElement.className = "firebase-status bg-green-500 text-white";
                     
                     setTimeout(() => {
-                        document.getElementById('firebaseStatus').classList.add('hidden');
-                    }, 2000);
+                        statusElement.classList.add('hidden');
+                    }, 3000);
                 } else {
-                    console.log("Firebase disconnected");
-                    document.getElementById('firebaseStatus').textContent = "⚠️ Offline Mode";
-                    document.getElementById('firebaseStatus').className = "firebase-status bg-yellow-500 text-white";
+                    isFirebaseConnected = false;
+                    statusElement.textContent = "❌ Firebase Disconnected";
+                    statusElement.className = "firebase-status bg-red-500 text-white";
+                    statusElement.classList.remove('hidden');
                 }
             });
             
-            return true;
+            // Show initial connecting status
+            const statusElement = document.getElementById('firebaseStatus');
+            statusElement.classList.remove('hidden');
+            statusElement.textContent = "🔄 Connecting to Firebase...";
+            statusElement.className = "firebase-status bg-yellow-500 text-white";
+            
         } catch (error) {
             console.error("Firebase initialization error:", error);
-            // Continue without Firebase - offline mode
-            document.getElementById('firebaseStatus').textContent = "⚠️ Offline Mode";
-            document.getElementById('firebaseStatus').className = "firebase-status bg-yellow-500 text-white";
-            
-            // Hide after 3 seconds
-            setTimeout(() => {
-                document.getElementById('firebaseStatus').classList.add('hidden');
-            }, 3000);
-            
-            return false;
+            document.getElementById('firebaseStatus').classList.add('hidden');
         }
     }
     
-    // ====== SIMPLIFIED ADDRESS SAVING ======
+    // ====== SAVE ADDRESS TO FIREBASE ======
     async function saveAddressToFirebase(addressData) {
-        // Always save to localStorage first
-        localStorage.setItem('easygo-address', JSON.stringify(addressData));
-        
-        // Try to save to Firebase if connected
-        if (database && isFirebaseConnected) {
-            try {
-                const addressRef = database.ref('addresses').push();
-                const addressKey = addressRef.key;
-                
-                const addressWithTimestamp = {
-                    ...addressData,
-                    id: addressKey,
-                    createdAt: Date.now(),
-                    cartTotal: parseFloat(localStorage.getItem('easygo-cart-items-total') || '0')
-                };
-                
-                await addressRef.set(addressWithTimestamp);
-                localStorage.setItem('easygo-address-firebase-id', addressKey);
-                
-                console.log("Address saved to Firebase:", addressKey);
-                return addressKey;
-            } catch (error) {
-                console.warn("Firebase save failed, continuing with localStorage:", error);
-                return null;
-            }
+        // If Firebase not connected, return a fake ID (offline mode)
+        if (!isFirebaseConnected || !database) {
+            console.log("Firebase offline - Address saved to localStorage only");
+            const offlineId = 'offline_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            addressData.offlineId = offlineId;
+            addressData.savedOffline = true;
+            return offlineId;
         }
         
-        console.log("Address saved to localStorage only");
-        return null;
+        try {
+            const addressRef = database.ref('addresses').push();
+            const addressKey = addressRef.key;
+            
+            const addressWithTimestamp = {
+                ...addressData,
+                id: addressKey,
+                createdAt: Date.now(),
+                cartTotal: parseFloat(localStorage.getItem('easygo-cart-items-total') || '0'),
+                cartItems: JSON.parse(localStorage.getItem('easygo-cart') || '[]')
+            };
+            
+            await addressRef.set(addressWithTimestamp);
+            
+            console.log("Address saved to Firebase with ID:", addressKey);
+            
+            // Update localStorage with Firebase ID
+            addressData.firebaseId = addressKey;
+            localStorage.setItem('easygo-address', JSON.stringify(addressData));
+            
+            return addressKey;
+        } catch (error) {
+            console.error("Error saving address to Firebase:", error);
+            // Return offline ID if Firebase fails
+            const offlineId = 'error_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            addressData.offlineId = offlineId;
+            addressData.saveError = true;
+            return offlineId;
+        }
     }
     
     // ====== INITIALIZATION ======
     document.addEventListener('DOMContentLoaded', function() {
         console.log("Easy Go Address Page Loading...");
+        
+        // Initialize Firebase (non-blocking)
+        setTimeout(initializeFirebase, 1000);
         
         // Check cart first
         if (checkCartEmpty()) {
@@ -702,15 +754,10 @@
         // Load cart total
         loadCartTotal();
         
-        // Initialize Firebase (non-blocking)
-        setTimeout(() => {
-            initializeFirebase();
-        }, 500);
-        
-        // Show delivery mode popup
+        // Show delivery mode popup after a short delay
         setTimeout(() => {
             showDeliveryModePopup();
-        }, 100);
+        }, 500);
         
         console.log("Page initialization complete");
     });
@@ -770,13 +817,10 @@
             document.getElementById('mapSection').classList.remove('hidden');
             document.getElementById('takeawaySummary').classList.add('hidden');
             
-            // Initialize map
+            // Initialize map with delay
             setTimeout(() => {
                 initMap();
-            }, 100);
-            
-            // Setup map event listeners
-            setupMapEventListeners();
+            }, 300);
             
         } else {
             // Show takeaway section
@@ -841,7 +885,7 @@
             
             const mapContainer = document.getElementById('map');
             if (!mapContainer) {
-                setTimeout(initMap, 500);
+                console.error("Map container not found");
                 return;
             }
             
@@ -870,11 +914,36 @@
                 minZoom: 10
             }).addTo(map);
             
-            // Add restaurant marker
-            L.marker(primeSquareLocation)
+            // Add restaurant marker with LOGO
+            const logoIcon = L.divIcon({
+                className: 'restaurant-logo-marker',
+                html: `<img src="https://raw.githubusercontent.com/Clean-Scripts/EasyGo-Expense-Tracker/refs/heads/main/logo.png" alt="Easy Go">`,
+                iconSize: [50, 50],
+                iconAnchor: [25, 50]
+            });
+            
+            L.marker(primeSquareLocation, { icon: logoIcon })
                 .addTo(map)
                 .bindPopup('<b>EasyGo Restaurant</b><br>📍 Prime Square, Indore<br>📍 Our Kitchen')
                 .openPopup();
+            
+            // Add service area boundary
+            L.polygon(indoreServiceArea, {
+                color: '#ef4444',
+                fillColor: '#fef2f2',
+                fillOpacity: 0.1,
+                weight: 2,
+                dashArray: '10, 10'
+            }).addTo(map).bindPopup('<b>Indore Service Area</b>');
+            
+            // Add 1km circle for ₹9 delivery
+            L.circle(primeSquareLocation, {
+                color: '#10b981',
+                fillColor: '#10b981',
+                fillOpacity: 0.1,
+                radius: 1000,
+                weight: 2
+            }).addTo(map).bindPopup('1km Fixed ₹9 Delivery Zone');
             
             // Add click event
             map.on('click', function(e) {
@@ -883,13 +952,16 @@
                 }
             });
             
-            // Force map resize
+            // Setup button event listeners
+            setupMapEventListeners();
+            
+            // Force map resize after a delay
             setTimeout(() => {
                 if (map) {
                     map.invalidateSize();
                     console.log("Map initialized successfully");
                 }
-            }, 300);
+            }, 500);
             
         } catch (error) {
             console.error("Error initializing map:", error);
@@ -897,13 +969,20 @@
     }
     
     function setupMapEventListeners() {
+        // Current location button
         document.getElementById('useCurrentLocationBtn').addEventListener('click', getCurrentLocation);
+        
+        // Manual location button
         document.getElementById('manualLocationBtn').addEventListener('click', function() {
+            if (!map) {
+                alert('Map is not ready yet. Please wait a moment.');
+                return;
+            }
             alert('Click anywhere on the map to set your exact delivery location');
         });
     }
     
-    function setUserLocation(lat, lng) {
+    async function setUserLocation(lat, lng) {
         try {
             document.getElementById('loadingOverlay').classList.remove('hidden');
             
@@ -916,7 +995,13 @@
             
             // Create new marker
             userMarker = L.marker([lat, lng], { 
-                draggable: true
+                draggable: true,
+                icon: L.divIcon({
+                    className: 'custom-marker',
+                    html: '<div style="background: #8b5cf6; width: 40px; height: 40px; border-radius: 50%; border: 3px solid white; box-shadow: 0 4px 10px rgba(0,0,0,0.3);"></div>',
+                    iconSize: [40, 40],
+                    iconAnchor: [20, 40]
+                })
             }).addTo(map);
             
             // Center map
@@ -952,19 +1037,26 @@
         
         if (navigator.geolocation) {
             navigator.geolocation.getCurrentPosition(
-                (position) => {
+                async (position) => {
                     const lat = position.coords.latitude;
                     const lng = position.coords.longitude;
-                    setUserLocation(lat, lng);
+                    
+                    await setUserLocation(lat, lng);
                 },
                 (error) => {
                     document.getElementById('loadingOverlay').classList.add('hidden');
                     console.error("Geolocation error:", error);
-                    alert("Unable to get location. Please click on the map.");
+                    
+                    if (error.code === error.PERMISSION_DENIED) {
+                        alert("Location access denied. Please click on the map.");
+                    } else {
+                        alert("Unable to get location. Please click on the map.");
+                    }
                 },
                 {
                     enableHighAccuracy: true,
-                    timeout: 10000
+                    timeout: 10000,
+                    maximumAge: 0
                 }
             );
         } else {
@@ -1001,23 +1093,49 @@
                     
                     <!-- Address Type -->
                     <div class="md:col-span-2">
-                        <label class="text-xs font-black uppercase text-gray-400 mb-2 block">Address Type</label>
-                        <select id="addressType" 
-                                class="w-full p-3 border-2 border-gray-200 rounded-2xl focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 outline-none transition font-medium">
-                            <option value="Home">🏠 Home</option>
-                            <option value="Work">💼 Work</option>
-                            <option value="Other">📍 Other</option>
-                        </select>
+                        <label class="text-xs font-black uppercase text-gray-400 mb-2 block">Address Type *</label>
+                        <div class="grid grid-cols-2 md:grid-cols-3 gap-2">
+                            <div class="address-type-option" onclick="selectAddressType('Flat', '🏢')">
+                                <div class="address-type-emoji">🏢</div>
+                                <span>Flat</span>
+                            </div>
+                            <div class="address-type-option" onclick="selectAddressType('House', '🏠')">
+                                <div class="address-type-emoji">🏠</div>
+                                <span>House</span>
+                            </div>
+                            <div class="address-type-option" onclick="selectAddressType('Office', '🏢')">
+                                <div class="address-type-emoji">💼</div>
+                                <span>Office</span>
+                            </div>
+                            <div class="address-type-option" onclick="selectAddressType('Hostel', '🏫')">
+                                <div class="address-type-emoji">🏫</div>
+                                <span>Hostel</span>
+                            </div>
+                            <div class="address-type-option" onclick="selectAddressType('PG', '🛏️')">
+                                <div class="address-type-emoji">🛏️</div>
+                                <span>P.G.</span>
+                            </div>
+                        </div>
+                        <input type="hidden" id="addressType" required value="">
                     </div>
                     
                     <!-- House Number -->
-                    <div class="md:col-span-2">
+                    <div>
                         <label class="text-xs font-black uppercase text-gray-400 mb-2 block">House/Flat No. *</label>
                         <input type="text" 
                                id="houseNumber" 
                                required
                                class="w-full p-3 border-2 border-gray-200 rounded-2xl focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 outline-none transition font-medium"
                                placeholder="House/Flat number">
+                    </div>
+                    
+                    <!-- Floor Number -->
+                    <div>
+                        <label class="text-xs font-black uppercase text-gray-400 mb-2 block">Floor No.</label>
+                        <input type="text" 
+                               id="floorNumber"
+                               class="w-full p-3 border-2 border-gray-200 rounded-2xl focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 outline-none transition font-medium"
+                               placeholder="Floor number (optional)">
                     </div>
                     
                     <!-- Locality -->
@@ -1032,15 +1150,16 @@
                     
                     <!-- Street -->
                     <div class="md:col-span-2">
-                        <label class="text-xs font-black uppercase text-gray-400 mb-2 block">Street/Landmark</label>
+                        <label class="text-xs font-black uppercase text-gray-400 mb-2 block">Street Name *</label>
                         <input type="text" 
                                id="street" 
+                               required
                                class="w-full p-3 border-2 border-gray-200 rounded-2xl focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 outline-none transition font-medium"
                                placeholder="Street name or landmark">
                     </div>
                     
                     <!-- Pincode -->
-                    <div class="md:col-span-2">
+                    <div>
                         <label class="text-xs font-black uppercase text-gray-400 mb-2 block">Pincode *</label>
                         <input type="text" 
                                id="pincode" 
@@ -1049,6 +1168,24 @@
                                pattern="[0-9]{6}"
                                class="w-full p-3 border-2 border-gray-200 rounded-2xl focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 outline-none transition font-medium"
                                placeholder="6-digit pincode">
+                    </div>
+                    
+                    <!-- City -->
+                    <div>
+                        <label class="text-xs font-black uppercase text-gray-400 mb-2 block">City</label>
+                        <input type="text" 
+                               id="city" 
+                               class="w-full p-3 border-2 border-gray-200 rounded-2xl focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 outline-none transition font-medium"
+                               placeholder="Enter city">
+                    </div>
+                    
+                    <!-- State -->
+                    <div class="md:col-span-2">
+                        <label class="text-xs font-black uppercase text-gray-400 mb-2 block">State</label>
+                        <input type="text" 
+                               id="state" 
+                               class="w-full p-3 border-2 border-gray-200 rounded-2xl focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 outline-none transition font-medium"
+                               placeholder="Enter state">
                     </div>
                 </div>
                 
@@ -1116,6 +1253,25 @@
         `;
     }
     
+    // ====== ADDRESS TYPE SELECTION ======
+    function selectAddressType(type, emoji) {
+        // Remove selected class from all
+        document.querySelectorAll('.address-type-option').forEach(el => {
+            el.classList.remove('selected');
+        });
+        
+        // Add selected class to clicked
+        const options = document.querySelectorAll('.address-type-option');
+        options.forEach(option => {
+            if (option.textContent.includes(type)) {
+                option.classList.add('selected');
+            }
+        });
+        
+        // Set hidden input value
+        document.getElementById('addressType').value = type;
+    }
+    
     // ====== SAVE FUNCTIONS ======
     async function saveAddress() {
         if (!validateAddressForm()) {
@@ -1129,25 +1285,36 @@
         const addressData = getAddressData();
         
         try {
-            // Save address to localStorage first
-            localStorage.setItem('easygo-address', JSON.stringify(addressData));
+            // Save to Firebase (or get offline ID)
+            const firebaseId = await saveAddressToFirebase(addressData);
             
-            // Try to save to Firebase (non-blocking)
-            saveAddressToFirebase(addressData);
+            // Save to localStorage regardless of Firebase status
+            localStorage.setItem('easygo-address', JSON.stringify(addressData));
+            localStorage.setItem('easygo-saved-address', JSON.stringify(addressData));
+            
+            // Store the ID (Firebase or offline)
+            if (firebaseId) {
+                localStorage.setItem('easygo-address-firebase-id', firebaseId);
+                console.log("Address saved with ID:", firebaseId);
+            }
             
             // Close popup and show delivery charges
-            setTimeout(() => {
-                closeAddressPopup();
-                document.getElementById('deliveryChargesCard').classList.remove('hidden');
-                document.getElementById('loadingOverlay').classList.add('hidden');
-                
-                // Show success message
-                showToast('Address saved successfully! ✅');
-            }, 500);
+            closeAddressPopup();
+            document.getElementById('deliveryChargesCard').classList.remove('hidden');
+            
+            // Show success message
+            showToast('Address saved successfully! ✅');
             
         } catch (error) {
             console.error("Error saving address:", error);
-            alert('Error saving address. Please try again.');
+            // Even if save fails, save to localStorage and continue
+            localStorage.setItem('easygo-address', JSON.stringify(addressData));
+            localStorage.setItem('easygo-saved-address', JSON.stringify(addressData));
+            
+            closeAddressPopup();
+            document.getElementById('deliveryChargesCard').classList.remove('hidden');
+            showToast('Address saved (offline mode)');
+        } finally {
             document.getElementById('loadingOverlay').classList.add('hidden');
         }
     }
@@ -1164,36 +1331,43 @@
         const takeawayData = getTakeawayData();
         
         try {
+            // Save to Firebase (or get offline ID)
+            const firebaseId = await saveAddressToFirebase(takeawayData);
+            
             // Save to localStorage
             localStorage.setItem('easygo-address', JSON.stringify(takeawayData));
             
-            // Try to save to Firebase (non-blocking)
-            saveAddressToFirebase(takeawayData);
+            // Store the ID
+            if (firebaseId) {
+                localStorage.setItem('easygo-address-firebase-id', firebaseId);
+                console.log("Takeaway saved with ID:", firebaseId);
+            }
             
             // Close popup
-            setTimeout(() => {
-                closeTakeawayPopup();
-                document.getElementById('loadingOverlay').classList.add('hidden');
-                
-                // Show success message
-                showToast('Takeaway details saved! ✅');
-            }, 500);
+            closeTakeawayPopup();
+            
+            // Show success message
+            showToast('Takeaway details saved! ✅');
             
         } catch (error) {
             console.error("Error saving takeaway:", error);
-            alert('Error saving details. Please try again.');
+            // Save to localStorage anyway
+            localStorage.setItem('easygo-address', JSON.stringify(takeawayData));
+            closeTakeawayPopup();
+            showToast('Takeaway details saved');
+        } finally {
             document.getElementById('loadingOverlay').classList.add('hidden');
         }
     }
     
     // ====== VALIDATION FUNCTIONS ======
     function validateAddressForm() {
-        const requiredFields = ['name', 'phone', 'houseNumber', 'locality', 'pincode'];
+        const requiredFields = ['name', 'phone', 'addressType', 'houseNumber', 'locality', 'street', 'pincode'];
         
         for (const fieldId of requiredFields) {
             const field = document.getElementById(fieldId);
             if (!field || !field.value.trim()) {
-                alert(`Please fill the ${fieldId} field`);
+                alert(`Please fill the ${fieldId.replace(/([A-Z])/g, ' $1').toLowerCase()} field`);
                 field?.focus();
                 return false;
             }
@@ -1202,12 +1376,14 @@
         const phone = document.getElementById('phone').value;
         if (!/^\d{10}$/.test(phone)) {
             alert('Please enter valid 10-digit phone number');
+            document.getElementById('phone').focus();
             return false;
         }
         
         const pincode = document.getElementById('pincode').value;
         if (!/^\d{6}$/.test(pincode)) {
             alert('Please enter valid 6-digit pincode');
+            document.getElementById('pincode').focus();
             return false;
         }
         
@@ -1220,11 +1396,13 @@
         
         if (!name.trim()) {
             alert('Please enter your name for takeaway');
+            document.getElementById('takeaway-name').focus();
             return false;
         }
         
         if (!/^\d{10}$/.test(phone)) {
             alert('Please enter valid 10-digit phone number');
+            document.getElementById('takeaway-phone').focus();
             return false;
         }
         
@@ -1242,9 +1420,12 @@
             phone: document.getElementById('phone').value,
             addressType: document.getElementById('addressType').value,
             houseNumber: document.getElementById('houseNumber').value,
+            floorNumber: document.getElementById('floorNumber').value,
             locality: document.getElementById('locality').value,
-            street: document.getElementById('street').value || '',
+            street: document.getElementById('street').value,
             pincode: document.getElementById('pincode').value,
+            city: document.getElementById('city').value || 'Indore',
+            state: document.getElementById('state').value || 'Madhya Pradesh',
             deliveryMode: 'delivery',
             location: userLocation,
             distance: distanceData.distance || '0',
@@ -1280,11 +1461,14 @@
             if (savedAddress.name) {
                 document.getElementById('name').value = savedAddress.name;
                 document.getElementById('phone').value = savedAddress.phone;
-                document.getElementById('addressType').value = savedAddress.addressType || 'Home';
+                document.getElementById('addressType').value = savedAddress.addressType || '';
                 document.getElementById('houseNumber').value = savedAddress.houseNumber || '';
+                document.getElementById('floorNumber').value = savedAddress.floorNumber || '';
                 document.getElementById('locality').value = savedAddress.locality || '';
                 document.getElementById('street').value = savedAddress.street || '';
                 document.getElementById('pincode').value = savedAddress.pincode || '';
+                document.getElementById('city').value = savedAddress.city || '';
+                document.getElementById('state').value = savedAddress.state || '';
             }
         } catch (error) {
             console.error("Error loading saved address:", error);
@@ -1319,6 +1503,17 @@
         
         // Free delivery for orders above ₹199
         const freeDeliveryEligible = cartTotal > 199;
+        
+        // Special location: Shree Vilas Palace
+        if (distance >= 13.5 && distance <= 14.5) {
+            return {
+                distance: "14.0",
+                charge: 40, // ₹40 for orders > ₹199
+                fixedDelivery: false,
+                freeDelivery: false,
+                specialLocation: true
+            };
+        }
         
         // Standard charges
         if (distance <= 4) {
@@ -1418,7 +1613,7 @@
                 return;
             }
             
-            // Validate address
+            // Validate address in localStorage
             const address = JSON.parse(localStorage.getItem('easygo-address') || '{}');
             if (!address.name || !address.phone) {
                 alert('Please save your address first');
@@ -1426,14 +1621,27 @@
                 return;
             }
             
-            // SIMPLIFIED CHECK - Always allow proceeding
-            // Even if Firebase is not connected, we have data in localStorage
-            document.getElementById('loadingOverlay').classList.remove('hidden');
+            // Check if we have minimum required data
+            const requiredData = ['name', 'phone', 'deliveryMode'];
+            const missingFields = requiredData.filter(field => !address[field]);
             
-            // Redirect to payment
-            setTimeout(() => {
-                window.location.href = 'https://clean-scripts.github.io/Easygo-Payment/';
-            }, 500);
+            if (missingFields.length > 0) {
+                alert('Missing required information. Please save your address again.');
+                showAddressPopup();
+                return;
+            }
+            
+            // Check cart
+            const cart = JSON.parse(localStorage.getItem('easygo-cart') || '[]');
+            if (cart.length === 0) {
+                alert('Your cart is empty');
+                window.location.href = 'https://clean-scripts.github.io/Easygo-Menu/';
+                return;
+            }
+            
+            // ALL CHECKS PASSED - Redirect to payment
+            console.log("All checks passed. Redirecting to payment...");
+            window.location.href = 'https://clean-scripts.github.io/Easygo-Payment/';
         }
     }
     
@@ -1445,12 +1653,17 @@
             return;
         }
         
-        document.getElementById('loadingOverlay').classList.remove('hidden');
+        // Check cart
+        const cart = JSON.parse(localStorage.getItem('easygo-cart') || '[]');
+        if (cart.length === 0) {
+            alert('Your cart is empty');
+            window.location.href = 'https://clean-scripts.github.io/Easygo-Menu/';
+            return;
+        }
         
         // Redirect to payment
-        setTimeout(() => {
-            window.location.href = 'https://clean-scripts.github.io/Easygo-Payment/';
-        }, 500);
+        console.log("Takeaway ready. Redirecting to payment...");
+        window.location.href = 'https://clean-scripts.github.io/Easygo-Payment/';
     }
     
     // ====== UTILITY FUNCTIONS ======
@@ -1493,27 +1706,33 @@
     
     function showToast(message) {
         const toast = document.createElement('div');
-        toast.className = 'fixed bottom-4 left-1/2 transform -translate-x-1/2 bg-green-600 text-white px-6 py-3 rounded-2xl shadow-lg z-50';
+        toast.className = 'fixed bottom-4 left-1/2 transform -translate-x-1/2 bg-green-600 text-white px-6 py-3 rounded-2xl shadow-lg z-50 animate-fadeIn';
         toast.textContent = message;
-        toast.style.animation = 'fadeIn 0.3s, fadeOut 0.3s 2.7s';
+        
+        // Add animation styles
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes fadeIn {
+                from { opacity: 0; transform: translate(-50%, 20px); }
+                to { opacity: 1; transform: translate(-50%, 0); }
+            }
+            @keyframes fadeOut {
+                from { opacity: 1; transform: translate(-50%, 0); }
+                to { opacity: 0; transform: translate(-50%, 20px); }
+            }
+            .animate-fadeIn {
+                animation: fadeIn 0.3s ease-out, fadeOut 0.3s ease-in 2.7s forwards;
+            }
+        `;
+        document.head.appendChild(style);
         
         document.body.appendChild(toast);
         
         setTimeout(() => {
             toast.remove();
+            style.remove();
         }, 3000);
     }
-    
-    // ====== ADDITIONAL FUNCTIONS FOR FORM INTERACTION ======
-    window.selectDeliveryMode = selectDeliveryMode;
-    window.saveAddress = saveAddress;
-    window.saveTakeaway = saveTakeaway;
-    window.proceedToPayment = proceedToPayment;
-    window.proceedToTakeawayPayment = proceedToTakeawayPayment;
-    window.showAddressPopup = showAddressPopup;
-    window.closeAddressPopup = closeAddressPopup;
-    window.closeTakeawayPopup = closeTakeawayPopup;
-    window.showDeliveryModePopup = showDeliveryModePopup;
 </script>
     
 </body>
