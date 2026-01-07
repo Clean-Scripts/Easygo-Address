@@ -212,6 +212,31 @@
             transition: all 0.3s;
             box-shadow: 0 2px 10px rgba(0,0,0,0.1);
         }
+        
+        /* Toast notifications */
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #10b981;
+            color: white;
+            padding: 12px 24px;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            z-index: 1000;
+            animation: slideUp 0.3s ease-out;
+        }
+        
+        @keyframes slideUp {
+            from { opacity: 0; transform: translate(-50%, 20px); }
+            to { opacity: 1; transform: translate(-50%, 0); }
+        }
+        
+        @keyframes slideDown {
+            from { opacity: 1; transform: translate(-50%, 0); }
+            to { opacity: 0; transform: translate(-50%, 20px); }
+        }
     </style>
 </head>
 <body class="antialiased flex flex-col min-h-screen">
@@ -246,7 +271,7 @@
     </div>
 
     <!-- POPUP 1: Delivery Mode Selection -->
-    <div id="deliveryModePopup" class="popup-overlay">
+    <div id="deliveryModePopup" class="popup-overlay hidden">
         <div class="popup-content">
             <div class="text-center mb-8">
                 <div class="w-20 h-20 bg-indigo-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
@@ -375,7 +400,7 @@
             
             <!-- Cart Summary -->
             <div class="glass-card rounded-[2rem] p-6 md:p-8 mb-8 md:mb-10 border-2 border-gray-100">
-                <div class="flex flex-col md:flex-row justify-between items-center pt-6 border-t border-gray-100 gap-4 md:gap-0">
+                <div class="flex items-center justify-between mb-6">
                     <div class="flex items-center gap-4">
                         <div class="w-12 md:w-14 h-12 md:h-14 bg-indigo-50 rounded-2xl flex items-center justify-center">
                             <i class="fas fa-shopping-cart text-indigo-600 text-lg md:text-xl"></i>
@@ -386,15 +411,28 @@
                         </div>
                     </div>
                     
+                    <!-- Clear All Button -->
+                    <button onclick="clearAllData()" 
+                            class="px-4 md:px-6 py-2 md:py-3 bg-red-100 text-red-600 rounded-2xl font-bold uppercase text-xs hover:bg-red-200 transition-all">
+                        <i class="fas fa-trash mr-2"></i>Clear All
+                    </button>
+                </div>
+                
+                <div class="flex flex-col md:flex-row justify-between items-center pt-6 border-t border-gray-100 gap-4 md:gap-0">
+                    <button onclick="window.location.href='https://clean-scripts.github.io/Easygo-Menu/'" 
+                            class="px-6 py-3 bg-gray-900 text-white font-bold uppercase rounded-2xl hover:bg-black transition-all w-full md:w-auto">
+                        <i class="fas fa-arrow-left mr-2"></i> Back to Menu
+                    </button>
+                    
                     <button onclick="showDeliveryModePopup()" 
-                            class="px-4 md:px-6 py-2 md:py-3 bg-gray-900 text-white rounded-2xl font-bold uppercase text-xs hover:bg-black transition-all">
-                        <i class="fas fa-edit mr-2"></i>Change Mode
+                            class="px-6 py-3 bg-indigo-600 text-white font-bold uppercase rounded-2xl hover:bg-indigo-700 transition-all w-full md:w-auto">
+                        <i class="fas fa-edit mr-2"></i> Change Mode
                     </button>
                 </div>
             </div>
 
             <!-- Selected Mode Display -->
-            <div id="selectedModeDisplay" class="glass-card rounded-[2rem] p-6 md:p-8 mb-8 md:mb-10 border-2 border-gray-100 hidden">
+            <div id="selectedModeDisplay" class="glass-card rounded-[2rem] p-6 md:p-8 mb-8 md:mb-10 border-2 border-gray-100">
                 <!-- Content will be loaded based on selection -->
             </div>
 
@@ -648,6 +686,170 @@
         }
     ];
     
+    // ====== STATE MANAGEMENT ======
+    const STATE_KEYS = {
+        DELIVERY_MODE: 'easygo-delivery-mode',
+        ADDRESS_DATA: 'easygo-address',
+        SAVED_ADDRESS: 'easygo-saved-address',
+        USER_LOCATION: 'easygo-user-location',
+        DELIVERY_DETAILS: 'easygo-delivery',
+        IS_NEW_ORDER: 'easygo-is-new-order',
+        ADDRESS_FIREBASE_ID: 'easygo-address-firebase-id'
+    };
+    
+    // ====== INITIALIZATION ======
+    document.addEventListener('DOMContentLoaded', function() {
+        console.log("Easy Go Address Page Loading...");
+        
+        // Initialize Firebase (non-blocking)
+        setTimeout(initializeFirebase, 1000);
+        
+        // Check cart first
+        if (checkCartEmpty()) {
+            console.log("Cart empty - stopping");
+            return;
+        }
+        
+        // Load cart total
+        loadCartTotal();
+        
+        // Load saved state
+        loadSavedState();
+        
+        console.log("Page initialization complete");
+    });
+    
+    // ====== STATE MANAGEMENT FUNCTIONS ======
+    function loadSavedState() {
+        try {
+            // Check if this is a new order or returning from payment
+            const isNewOrder = localStorage.getItem(STATE_KEYS.IS_NEW_ORDER) !== 'false';
+            
+            // Get saved delivery mode
+            const savedMode = localStorage.getItem(STATE_KEYS.DELIVERY_MODE);
+            const savedAddress = JSON.parse(localStorage.getItem(STATE_KEYS.ADDRESS_DATA) || '{}');
+            const savedLocation = JSON.parse(localStorage.getItem(STATE_KEYS.USER_LOCATION) || 'null');
+            
+            console.log("Loading saved state:", { isNewOrder, savedMode, savedAddress, savedLocation });
+            
+            if (isNewOrder) {
+                // New order - show popup to select mode
+                console.log("New order - showing mode selection");
+                setTimeout(() => {
+                    showDeliveryModePopup();
+                }, 500);
+            } else if (savedMode && savedAddress.name) {
+                // Returning user with saved data - restore everything
+                console.log("Returning user - restoring saved data");
+                currentDeliveryMode = savedMode;
+                
+                if (savedLocation && savedMode === 'delivery') {
+                    userLocation = savedLocation;
+                }
+                
+                // Update UI based on saved data
+                updateSelectedModeDisplay();
+                
+                if (savedMode === 'delivery') {
+                    // Show map section
+                    document.getElementById('mapSection').classList.remove('hidden');
+                    document.getElementById('takeawaySummary').classList.add('hidden');
+                    
+                    // Initialize map and restore location
+                    setTimeout(() => {
+                        initMap();
+                        if (userLocation) {
+                            // Set user location after map loads
+                            setTimeout(() => {
+                                setUserLocation(userLocation.lat, userLocation.lng);
+                            }, 1000);
+                        }
+                        
+                        // Show delivery charges if location is set
+                        if (userLocation) {
+                            document.getElementById('deliveryChargesCard').classList.remove('hidden');
+                            updateDeliveryCharges();
+                        }
+                    }, 300);
+                    
+                } else {
+                    // Show takeaway section
+                    document.getElementById('mapSection').classList.add('hidden');
+                    document.getElementById('takeawaySummary').classList.remove('hidden');
+                }
+                
+                // Show toast notification
+                showToast('Welcome back! Your saved details are restored ✅');
+                
+            } else {
+                // No saved data - show popup
+                console.log("No saved data - showing mode selection");
+                setTimeout(() => {
+                    showDeliveryModePopup();
+                }, 500);
+            }
+            
+        } catch (error) {
+            console.error("Error loading saved state:", error);
+            // Fallback to showing popup
+            setTimeout(() => {
+                showDeliveryModePopup();
+            }, 500);
+        }
+    }
+    
+    function saveState() {
+        try {
+            // Save delivery mode
+            if (currentDeliveryMode) {
+                localStorage.setItem(STATE_KEYS.DELIVERY_MODE, currentDeliveryMode);
+            }
+            
+            // Save user location
+            if (userLocation) {
+                localStorage.setItem(STATE_KEYS.USER_LOCATION, JSON.stringify(userLocation));
+            }
+            
+            // Mark that we're not starting a new order anymore
+            localStorage.setItem(STATE_KEYS.IS_NEW_ORDER, 'false');
+            
+            console.log("State saved successfully");
+        } catch (error) {
+            console.error("Error saving state:", error);
+        }
+    }
+    
+    function clearAllData() {
+        if (confirm('Are you sure you want to clear all saved data? This will remove your address and delivery preferences.')) {
+            // Clear all saved state
+            Object.values(STATE_KEYS).forEach(key => {
+                localStorage.removeItem(key);
+            });
+            
+            // Clear cart if needed
+            // localStorage.removeItem('easygo-cart');
+            // localStorage.removeItem('easygo-cart-items-total');
+            
+            // Reset variables
+            currentDeliveryMode = null;
+            userLocation = null;
+            
+            // Reset UI
+            document.getElementById('selectedModeDisplay').innerHTML = '';
+            document.getElementById('selectedModeDisplay').classList.add('hidden');
+            document.getElementById('mapSection').classList.add('hidden');
+            document.getElementById('deliveryChargesCard').classList.add('hidden');
+            document.getElementById('takeawaySummary').classList.add('hidden');
+            document.getElementById('locationStatus').classList.add('hidden');
+            
+            // Show popup for new selection
+            showToast('All data cleared successfully');
+            setTimeout(() => {
+                showDeliveryModePopup();
+            }, 1000);
+        }
+    }
+    
     // ====== FIREBASE INITIALIZATION ======
     function initializeFirebase() {
         try {
@@ -696,72 +898,6 @@
         }
     }
     
-    // ====== SAVE ADDRESS TO FIREBASE ======
-    async function saveAddressToFirebase(addressData) {
-        // If Firebase not connected, return a fake ID (offline mode)
-        if (!isFirebaseConnected || !database) {
-            console.log("Firebase offline - Address saved to localStorage only");
-            const offlineId = 'offline_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
-            addressData.offlineId = offlineId;
-            addressData.savedOffline = true;
-            return offlineId;
-        }
-        
-        try {
-            const addressRef = database.ref('addresses').push();
-            const addressKey = addressRef.key;
-            
-            const addressWithTimestamp = {
-                ...addressData,
-                id: addressKey,
-                createdAt: Date.now(),
-                cartTotal: parseFloat(localStorage.getItem('easygo-cart-items-total') || '0'),
-                cartItems: JSON.parse(localStorage.getItem('easygo-cart') || '[]')
-            };
-            
-            await addressRef.set(addressWithTimestamp);
-            
-            console.log("Address saved to Firebase with ID:", addressKey);
-            
-            // Update localStorage with Firebase ID
-            addressData.firebaseId = addressKey;
-            localStorage.setItem('easygo-address', JSON.stringify(addressData));
-            
-            return addressKey;
-        } catch (error) {
-            console.error("Error saving address to Firebase:", error);
-            // Return offline ID if Firebase fails
-            const offlineId = 'error_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
-            addressData.offlineId = offlineId;
-            addressData.saveError = true;
-            return offlineId;
-        }
-    }
-    
-    // ====== INITIALIZATION ======
-    document.addEventListener('DOMContentLoaded', function() {
-        console.log("Easy Go Address Page Loading...");
-        
-        // Initialize Firebase (non-blocking)
-        setTimeout(initializeFirebase, 1000);
-        
-        // Check cart first
-        if (checkCartEmpty()) {
-            console.log("Cart empty - stopping");
-            return;
-        }
-        
-        // Load cart total
-        loadCartTotal();
-        
-        // Show delivery mode popup after a short delay
-        setTimeout(() => {
-            showDeliveryModePopup();
-        }, 500);
-        
-        console.log("Page initialization complete");
-    });
-    
     // ====== POPUP FUNCTIONS ======
     function showDeliveryModePopup() {
         document.getElementById('deliveryModePopup').classList.remove('hidden');
@@ -797,6 +933,9 @@
         document.getElementById('takeawayPopupContent').innerHTML = getTakeawayFormHTML();
         document.getElementById('takeawayPopup').classList.remove('hidden');
         document.body.style.overflow = 'hidden';
+        
+        // Load saved takeaway data
+        loadSavedTakeaway();
     }
     
     function closeTakeawayPopup() {
@@ -808,6 +947,9 @@
     function selectDeliveryMode(mode) {
         currentDeliveryMode = mode;
         closeDeliveryModePopup();
+        
+        // Save state
+        saveState();
         
         // Update UI based on selection
         updateSelectedModeDisplay();
@@ -851,7 +993,7 @@
                     </div>
                     <button onclick="showDeliveryModePopup()" 
                             class="px-4 py-2 bg-gray-200 text-gray-800 rounded-xl font-bold hover:bg-gray-300 transition">
-                        Change
+                        Change Mode
                     </button>
                 </div>
             `;
@@ -869,7 +1011,7 @@
                     </div>
                     <button onclick="showDeliveryModePopup()" 
                             class="px-4 py-2 bg-gray-200 text-gray-800 rounded-xl font-bold hover:bg-gray-300 transition">
-                        Change
+                        Change Mode
                     </button>
                 </div>
             `;
@@ -1014,11 +1156,15 @@
             document.getElementById('locationStatus').classList.remove('hidden');
             document.getElementById('loadingOverlay').classList.add('hidden');
             
+            // Save state
+            saveState();
+            
             // Add dragend event
             userMarker.on('dragend', function() {
                 const position = userMarker.getLatLng();
                 userLocation = { lat: position.lat, lng: position.lng };
                 updateDeliveryCharges();
+                saveState();
             });
             
             console.log("User location set successfully");
@@ -1288,13 +1434,13 @@
             // Save to Firebase (or get offline ID)
             const firebaseId = await saveAddressToFirebase(addressData);
             
-            // Save to localStorage regardless of Firebase status
-            localStorage.setItem('easygo-address', JSON.stringify(addressData));
-            localStorage.setItem('easygo-saved-address', JSON.stringify(addressData));
+            // Save to localStorage
+            localStorage.setItem(STATE_KEYS.ADDRESS_DATA, JSON.stringify(addressData));
+            localStorage.setItem(STATE_KEYS.SAVED_ADDRESS, JSON.stringify(addressData));
             
             // Store the ID (Firebase or offline)
             if (firebaseId) {
-                localStorage.setItem('easygo-address-firebase-id', firebaseId);
+                localStorage.setItem(STATE_KEYS.ADDRESS_FIREBASE_ID, firebaseId);
                 console.log("Address saved with ID:", firebaseId);
             }
             
@@ -1302,18 +1448,22 @@
             closeAddressPopup();
             document.getElementById('deliveryChargesCard').classList.remove('hidden');
             
+            // Save state
+            saveState();
+            
             // Show success message
             showToast('Address saved successfully! ✅');
             
         } catch (error) {
             console.error("Error saving address:", error);
             // Even if save fails, save to localStorage and continue
-            localStorage.setItem('easygo-address', JSON.stringify(addressData));
-            localStorage.setItem('easygo-saved-address', JSON.stringify(addressData));
+            localStorage.setItem(STATE_KEYS.ADDRESS_DATA, JSON.stringify(addressData));
+            localStorage.setItem(STATE_KEYS.SAVED_ADDRESS, JSON.stringify(addressData));
             
             closeAddressPopup();
             document.getElementById('deliveryChargesCard').classList.remove('hidden');
-            showToast('Address saved (offline mode)');
+            saveState();
+            showToast('Address saved ✅');
         } finally {
             document.getElementById('loadingOverlay').classList.add('hidden');
         }
@@ -1335,16 +1485,19 @@
             const firebaseId = await saveAddressToFirebase(takeawayData);
             
             // Save to localStorage
-            localStorage.setItem('easygo-address', JSON.stringify(takeawayData));
+            localStorage.setItem(STATE_KEYS.ADDRESS_DATA, JSON.stringify(takeawayData));
             
             // Store the ID
             if (firebaseId) {
-                localStorage.setItem('easygo-address-firebase-id', firebaseId);
+                localStorage.setItem(STATE_KEYS.ADDRESS_FIREBASE_ID, firebaseId);
                 console.log("Takeaway saved with ID:", firebaseId);
             }
             
             // Close popup
             closeTakeawayPopup();
+            
+            // Save state
+            saveState();
             
             // Show success message
             showToast('Takeaway details saved! ✅');
@@ -1352,11 +1505,95 @@
         } catch (error) {
             console.error("Error saving takeaway:", error);
             // Save to localStorage anyway
-            localStorage.setItem('easygo-address', JSON.stringify(takeawayData));
+            localStorage.setItem(STATE_KEYS.ADDRESS_DATA, JSON.stringify(takeawayData));
             closeTakeawayPopup();
-            showToast('Takeaway details saved');
+            saveState();
+            showToast('Takeaway details saved ✅');
         } finally {
             document.getElementById('loadingOverlay').classList.add('hidden');
+        }
+    }
+    
+    // ====== FIREBASE SAVE FUNCTION ======
+    async function saveAddressToFirebase(addressData) {
+        // If Firebase not connected, return a fake ID (offline mode)
+        if (!isFirebaseConnected || !database) {
+            console.log("Firebase offline - Address saved to localStorage only");
+            const offlineId = 'offline_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            addressData.offlineId = offlineId;
+            addressData.savedOffline = true;
+            return offlineId;
+        }
+        
+        try {
+            const addressRef = database.ref('addresses').push();
+            const addressKey = addressRef.key;
+            
+            const addressWithTimestamp = {
+                ...addressData,
+                id: addressKey,
+                createdAt: Date.now(),
+                cartTotal: parseFloat(localStorage.getItem('easygo-cart-items-total') || '0'),
+                cartItems: JSON.parse(localStorage.getItem('easygo-cart') || '[]')
+            };
+            
+            await addressRef.set(addressWithTimestamp);
+            
+            console.log("Address saved to Firebase with ID:", addressKey);
+            
+            return addressKey;
+        } catch (error) {
+            console.error("Error saving address to Firebase:", error);
+            // Return offline ID if Firebase fails
+            const offlineId = 'error_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            addressData.offlineId = offlineId;
+            addressData.saveError = true;
+            return offlineId;
+        }
+    }
+    
+    // ====== LOAD SAVED DATA ======
+    function loadSavedAddress() {
+        try {
+            const savedAddress = JSON.parse(localStorage.getItem(STATE_KEYS.SAVED_ADDRESS) || '{}');
+            
+            if (savedAddress.name) {
+                document.getElementById('name').value = savedAddress.name;
+                document.getElementById('phone').value = savedAddress.phone;
+                document.getElementById('addressType').value = savedAddress.addressType || '';
+                document.getElementById('houseNumber').value = savedAddress.houseNumber || '';
+                document.getElementById('floorNumber').value = savedAddress.floorNumber || '';
+                document.getElementById('locality').value = savedAddress.locality || '';
+                document.getElementById('street').value = savedAddress.street || '';
+                document.getElementById('pincode').value = savedAddress.pincode || '';
+                document.getElementById('city').value = savedAddress.city || '';
+                document.getElementById('state').value = savedAddress.state || '';
+                
+                // Select address type visually
+                if (savedAddress.addressType) {
+                    const options = document.querySelectorAll('.address-type-option');
+                    options.forEach(option => {
+                        if (option.textContent.includes(savedAddress.addressType)) {
+                            option.classList.add('selected');
+                        }
+                    });
+                }
+            }
+        } catch (error) {
+            console.error("Error loading saved address:", error);
+        }
+    }
+    
+    function loadSavedTakeaway() {
+        try {
+            const savedTakeaway = JSON.parse(localStorage.getItem(STATE_KEYS.ADDRESS_DATA) || '{}');
+            
+            if (savedTakeaway.name) {
+                document.getElementById('takeaway-name').value = savedTakeaway.name;
+                document.getElementById('takeaway-phone').value = savedTakeaway.phone;
+            }
+        } catch (error) {
+            console.error("Error loading saved takeaway:", error);
         }
     }
     
@@ -1413,7 +1650,7 @@
     function getAddressData() {
         const cartTotal = parseFloat(localStorage.getItem('easygo-cart-items-total') || '0');
         const cartItems = JSON.parse(localStorage.getItem('easygo-cart') || '[]');
-        const distanceData = JSON.parse(localStorage.getItem('easygo-delivery') || '{}');
+        const distanceData = JSON.parse(localStorage.getItem(STATE_KEYS.DELIVERY_DETAILS) || '{}');
         
         return {
             name: document.getElementById('name').value,
@@ -1451,28 +1688,6 @@
             createdAt: Date.now(),
             status: 'pending'
         };
-    }
-    
-    // ====== LOAD SAVED ADDRESS ======
-    function loadSavedAddress() {
-        try {
-            const savedAddress = JSON.parse(localStorage.getItem('easygo-saved-address') || '{}');
-            
-            if (savedAddress.name) {
-                document.getElementById('name').value = savedAddress.name;
-                document.getElementById('phone').value = savedAddress.phone;
-                document.getElementById('addressType').value = savedAddress.addressType || '';
-                document.getElementById('houseNumber').value = savedAddress.houseNumber || '';
-                document.getElementById('floorNumber').value = savedAddress.floorNumber || '';
-                document.getElementById('locality').value = savedAddress.locality || '';
-                document.getElementById('street').value = savedAddress.street || '';
-                document.getElementById('pincode').value = savedAddress.pincode || '';
-                document.getElementById('city').value = savedAddress.city || '';
-                document.getElementById('state').value = savedAddress.state || '';
-            }
-        } catch (error) {
-            console.error("Error loading saved address:", error);
-        }
     }
     
     // ====== DELIVERY CALCULATIONS ======
@@ -1598,7 +1813,7 @@
         document.getElementById('proceedToPaymentBtn').classList.remove('opacity-50', 'cursor-not-allowed');
         
         // Save delivery data
-        localStorage.setItem('easygo-delivery', JSON.stringify({
+        localStorage.setItem(STATE_KEYS.DELIVERY_DETAILS, JSON.stringify({
             distance: charges.distance,
             charge: charges.charge,
             location: userLocation
@@ -1614,7 +1829,7 @@
             }
             
             // Validate address in localStorage
-            const address = JSON.parse(localStorage.getItem('easygo-address') || '{}');
+            const address = JSON.parse(localStorage.getItem(STATE_KEYS.ADDRESS_DATA) || '{}');
             if (!address.name || !address.phone) {
                 alert('Please save your address first');
                 showAddressPopup();
@@ -1639,6 +1854,9 @@
                 return;
             }
             
+            // Mark as new order for next time
+            localStorage.setItem(STATE_KEYS.IS_NEW_ORDER, 'true');
+            
             // ALL CHECKS PASSED - Redirect to payment
             console.log("All checks passed. Redirecting to payment...");
             window.location.href = 'https://clean-scripts.github.io/Easygo-Payment/';
@@ -1646,7 +1864,7 @@
     }
     
     async function proceedToTakeawayPayment() {
-        const takeaway = JSON.parse(localStorage.getItem('easygo-address') || '{}');
+        const takeaway = JSON.parse(localStorage.getItem(STATE_KEYS.ADDRESS_DATA) || '{}');
         if (!takeaway.name || !takeaway.phone) {
             alert('Please save your takeaway details first');
             showTakeawayPopup();
@@ -1660,6 +1878,9 @@
             window.location.href = 'https://clean-scripts.github.io/Easygo-Menu/';
             return;
         }
+        
+        // Mark as new order for next time
+        localStorage.setItem(STATE_KEYS.IS_NEW_ORDER, 'true');
         
         // Redirect to payment
         console.log("Takeaway ready. Redirecting to payment...");
@@ -1706,32 +1927,29 @@
     
     function showToast(message) {
         const toast = document.createElement('div');
-        toast.className = 'fixed bottom-4 left-1/2 transform -translate-x-1/2 bg-green-600 text-white px-6 py-3 rounded-2xl shadow-lg z-50 animate-fadeIn';
+        toast.className = 'toast';
         toast.textContent = message;
-        
-        // Add animation styles
-        const style = document.createElement('style');
-        style.textContent = `
-            @keyframes fadeIn {
-                from { opacity: 0; transform: translate(-50%, 20px); }
-                to { opacity: 1; transform: translate(-50%, 0); }
-            }
-            @keyframes fadeOut {
-                from { opacity: 1; transform: translate(-50%, 0); }
-                to { opacity: 0; transform: translate(-50%, 20px); }
-            }
-            .animate-fadeIn {
-                animation: fadeIn 0.3s ease-out, fadeOut 0.3s ease-in 2.7s forwards;
-            }
-        `;
-        document.head.appendChild(style);
         
         document.body.appendChild(toast);
         
+        // Remove after 3 seconds
         setTimeout(() => {
-            toast.remove();
-            style.remove();
+            toast.style.animation = 'slideDown 0.3s ease-out forwards';
+            setTimeout(() => {
+                toast.remove();
+            }, 300);
         }, 3000);
+    }
+    
+    // ====== CART CLEARING ON NEW ORDER ======
+    // When coming from menu, mark as new order
+    if (document.referrer.includes('Easygo-Menu')) {
+        localStorage.setItem(STATE_KEYS.IS_NEW_ORDER, 'true');
+    }
+    
+    // When coming from payment page, don't clear anything
+    if (document.referrer.includes('Easygo-Payment')) {
+        localStorage.setItem(STATE_KEYS.IS_NEW_ORDER, 'false');
     }
 </script>
     
