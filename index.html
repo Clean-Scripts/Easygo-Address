@@ -237,6 +237,27 @@
             from { opacity: 1; transform: translate(-50%, 0); }
             to { opacity: 0; transform: translate(-50%, 20px); }
         }
+        
+        /* Status indicator for saved data */
+        .status-indicator {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        
+        .status-saved {
+            background: #d1fae5;
+            color: #065f46;
+        }
+        
+        .status-pending {
+            background: #fef3c7;
+            color: #92400e;
+        }
     </style>
 </head>
 <body class="antialiased flex flex-col min-h-screen">
@@ -418,6 +439,20 @@
                     </button>
                 </div>
                 
+                <!-- Session Info -->
+                <div id="sessionInfo" class="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-xl hidden">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center gap-2">
+                            <i class="fas fa-info-circle text-blue-500"></i>
+                            <span class="text-sm text-blue-700">Using saved details</span>
+                        </div>
+                        <span class="status-indicator status-saved">
+                            <i class="fas fa-check-circle"></i>
+                            Saved
+                        </span>
+                    </div>
+                </div>
+                
                 <div class="flex flex-col md:flex-row justify-between items-center pt-6 border-t border-gray-100 gap-4 md:gap-0">
                     <button onclick="window.location.href='https://clean-scripts.github.io/Easygo-Menu/'" 
                             class="px-6 py-3 bg-gray-900 text-white font-bold uppercase rounded-2xl hover:bg-black transition-all w-full md:w-auto">
@@ -432,7 +467,7 @@
             </div>
 
             <!-- Selected Mode Display -->
-            <div id="selectedModeDisplay" class="glass-card rounded-[2rem] p-6 md:p-8 mb-8 md:mb-10 border-2 border-gray-100">
+            <div id="selectedModeDisplay" class="glass-card rounded-[2rem] p-6 md:p-8 mb-8 md:mb-10 border-2 border-gray-100 hidden">
                 <!-- Content will be loaded based on selection -->
             </div>
 
@@ -686,20 +721,24 @@
         }
     ];
     
-    // ====== STATE MANAGEMENT ======
+    // ====== STATE MANAGEMENT KEYS ======
     const STATE_KEYS = {
         DELIVERY_MODE: 'easygo-delivery-mode',
-        ADDRESS_DATA: 'easygo-address',
+        ADDRESS_DATA: 'easygo-address-data',
         SAVED_ADDRESS: 'easygo-saved-address',
         USER_LOCATION: 'easygo-user-location',
-        DELIVERY_DETAILS: 'easygo-delivery',
+        DELIVERY_DETAILS: 'easygo-delivery-details',
         IS_NEW_ORDER: 'easygo-is-new-order',
-        ADDRESS_FIREBASE_ID: 'easygo-address-firebase-id'
+        ADDRESS_FIREBASE_ID: 'easygo-address-firebase-id',
+        PAGE_SOURCE: 'easygo-page-source'
     };
     
     // ====== INITIALIZATION ======
     document.addEventListener('DOMContentLoaded', function() {
         console.log("Easy Go Address Page Loading...");
+        
+        // Track where user came from
+        trackPageSource();
         
         // Initialize Firebase (non-blocking)
         setTimeout(initializeFirebase, 1000);
@@ -713,81 +752,80 @@
         // Load cart total
         loadCartTotal();
         
-        // Load saved state
-        loadSavedState();
+        // Load saved state based on page source
+        loadSavedStateBasedOnSource();
         
         console.log("Page initialization complete");
     });
     
+    // ====== PAGE SOURCE TRACKING ======
+    function trackPageSource() {
+        const referrer = document.referrer;
+        let source = 'direct';
+        
+        if (referrer.includes('Easygo-Menu')) {
+            source = 'menu';
+        } else if (referrer.includes('Easygo-Payment')) {
+            source = 'payment';
+        } else if (referrer.includes('Easygo-Track')) {
+            source = 'track';
+        }
+        
+        // Save current page source
+        sessionStorage.setItem('currentPageSource', source);
+        
+        console.log("Page source detected:", source);
+        return source;
+    }
+    
     // ====== STATE MANAGEMENT FUNCTIONS ======
-    function loadSavedState() {
+    function loadSavedStateBasedOnSource() {
         try {
-            // Check if this is a new order or returning from payment
-            const isNewOrder = localStorage.getItem(STATE_KEYS.IS_NEW_ORDER) !== 'false';
+            const source = sessionStorage.getItem('currentPageSource') || 'direct';
+            console.log("Loading state for source:", source);
             
-            // Get saved delivery mode
-            const savedMode = localStorage.getItem(STATE_KEYS.DELIVERY_MODE);
+            // Check if we have a saved order in progress
+            const savedDeliveryMode = localStorage.getItem(STATE_KEYS.DELIVERY_MODE);
             const savedAddress = JSON.parse(localStorage.getItem(STATE_KEYS.ADDRESS_DATA) || '{}');
             const savedLocation = JSON.parse(localStorage.getItem(STATE_KEYS.USER_LOCATION) || 'null');
             
-            console.log("Loading saved state:", { isNewOrder, savedMode, savedAddress, savedLocation });
+            console.log("Saved data found:", {
+                deliveryMode: savedDeliveryMode,
+                hasAddress: !!savedAddress.name,
+                hasLocation: !!savedLocation
+            });
             
-            if (isNewOrder) {
-                // New order - show popup to select mode
-                console.log("New order - showing mode selection");
-                setTimeout(() => {
-                    showDeliveryModePopup();
-                }, 500);
-            } else if (savedMode && savedAddress.name) {
-                // Returning user with saved data - restore everything
-                console.log("Returning user - restoring saved data");
-                currentDeliveryMode = savedMode;
-                
-                if (savedLocation && savedMode === 'delivery') {
-                    userLocation = savedLocation;
-                }
-                
-                // Update UI based on saved data
-                updateSelectedModeDisplay();
-                
-                if (savedMode === 'delivery') {
-                    // Show map section
-                    document.getElementById('mapSection').classList.remove('hidden');
-                    document.getElementById('takeawaySummary').classList.add('hidden');
-                    
-                    // Initialize map and restore location
-                    setTimeout(() => {
-                        initMap();
-                        if (userLocation) {
-                            // Set user location after map loads
-                            setTimeout(() => {
-                                setUserLocation(userLocation.lat, userLocation.lng);
-                            }, 1000);
-                        }
-                        
-                        // Show delivery charges if location is set
-                        if (userLocation) {
-                            document.getElementById('deliveryChargesCard').classList.remove('hidden');
-                            updateDeliveryCharges();
-                        }
-                    }, 300);
-                    
-                } else {
-                    // Show takeaway section
-                    document.getElementById('mapSection').classList.add('hidden');
-                    document.getElementById('takeawaySummary').classList.remove('hidden');
-                }
-                
-                // Show toast notification
-                showToast('Welcome back! Your saved details are restored ✅');
-                
-            } else {
-                // No saved data - show popup
-                console.log("No saved data - showing mode selection");
-                setTimeout(() => {
-                    showDeliveryModePopup();
-                }, 500);
+            // RULE 1: If coming from payment page, NEVER show popup
+            if (source === 'payment') {
+                console.log("Coming from payment - restoring saved data");
+                restoreSavedData(savedDeliveryMode, savedAddress, savedLocation);
+                showSessionInfo(true);
+                return;
             }
+            
+            // RULE 2: If coming from menu (new order) OR no saved data
+            if (source === 'menu' || !savedDeliveryMode || !savedAddress.name) {
+                console.log("New order or no saved data - showing mode selection");
+                setTimeout(() => {
+                    showDeliveryModePopup();
+                }, 500);
+                showSessionInfo(false);
+                return;
+            }
+            
+            // RULE 3: If coming directly or from track page with saved data
+            if ((source === 'direct' || source === 'track') && savedDeliveryMode && savedAddress.name) {
+                console.log("Returning user with saved data - restoring");
+                restoreSavedData(savedDeliveryMode, savedAddress, savedLocation);
+                showSessionInfo(true);
+                return;
+            }
+            
+            // Default fallback
+            console.log("Default fallback - showing mode selection");
+            setTimeout(() => {
+                showDeliveryModePopup();
+            }, 500);
             
         } catch (error) {
             console.error("Error loading saved state:", error);
@@ -796,6 +834,53 @@
                 showDeliveryModePopup();
             }, 500);
         }
+    }
+    
+    function restoreSavedData(savedMode, savedAddress, savedLocation) {
+        currentDeliveryMode = savedMode;
+        
+        if (savedLocation && savedMode === 'delivery') {
+            userLocation = savedLocation;
+        }
+        
+        // Update UI based on saved data
+        updateSelectedModeDisplay();
+        
+        if (savedMode === 'delivery') {
+            // Show map section
+            document.getElementById('mapSection').classList.remove('hidden');
+            document.getElementById('takeawaySummary').classList.add('hidden');
+            
+            // Initialize map and restore location
+            setTimeout(() => {
+                initMap();
+                if (userLocation) {
+                    // Set user location after map loads
+                    setTimeout(() => {
+                        setUserLocation(userLocation.lat, userLocation.lng);
+                    }, 1000);
+                }
+                
+                // Show delivery charges if location is set
+                if (userLocation) {
+                    document.getElementById('deliveryChargesCard').classList.remove('hidden');
+                    updateDeliveryCharges();
+                }
+            }, 300);
+            
+            // If address is saved, auto-fill address popup when opened
+            if (savedAddress.name) {
+                // Address will be loaded when popup opens
+            }
+            
+        } else {
+            // Show takeaway section
+            document.getElementById('mapSection').classList.add('hidden');
+            document.getElementById('takeawaySummary').classList.remove('hidden');
+        }
+        
+        // Show welcome back message
+        showToast('Welcome back! Your saved details are restored ✅');
     }
     
     function saveState() {
@@ -810,9 +895,6 @@
                 localStorage.setItem(STATE_KEYS.USER_LOCATION, JSON.stringify(userLocation));
             }
             
-            // Mark that we're not starting a new order anymore
-            localStorage.setItem(STATE_KEYS.IS_NEW_ORDER, 'false');
-            
             console.log("State saved successfully");
         } catch (error) {
             console.error("Error saving state:", error);
@@ -823,12 +905,10 @@
         if (confirm('Are you sure you want to clear all saved data? This will remove your address and delivery preferences.')) {
             // Clear all saved state
             Object.values(STATE_KEYS).forEach(key => {
-                localStorage.removeItem(key);
+                if (key !== 'PAGE_SOURCE') { // Don't clear page source
+                    localStorage.removeItem(key);
+                }
             });
-            
-            // Clear cart if needed
-            // localStorage.removeItem('easygo-cart');
-            // localStorage.removeItem('easygo-cart-items-total');
             
             // Reset variables
             currentDeliveryMode = null;
@@ -841,12 +921,22 @@
             document.getElementById('deliveryChargesCard').classList.add('hidden');
             document.getElementById('takeawaySummary').classList.add('hidden');
             document.getElementById('locationStatus').classList.add('hidden');
+            document.getElementById('sessionInfo').classList.add('hidden');
             
             // Show popup for new selection
             showToast('All data cleared successfully');
             setTimeout(() => {
                 showDeliveryModePopup();
             }, 1000);
+        }
+    }
+    
+    function showSessionInfo(isSaved) {
+        const sessionInfo = document.getElementById('sessionInfo');
+        if (isSaved) {
+            sessionInfo.classList.remove('hidden');
+        } else {
+            sessionInfo.classList.add('hidden');
         }
     }
     
@@ -964,15 +1054,31 @@
                 initMap();
             }, 300);
             
+            // Check if we have saved location
+            const savedLocation = JSON.parse(localStorage.getItem(STATE_KEYS.USER_LOCATION) || 'null');
+            if (savedLocation) {
+                userLocation = savedLocation;
+                setTimeout(() => {
+                    setUserLocation(savedLocation.lat, savedLocation.lng);
+                }, 1000);
+            }
+            
         } else {
             // Show takeaway section
             document.getElementById('mapSection').classList.add('hidden');
             document.getElementById('takeawaySummary').classList.remove('hidden');
             
-            // Show takeaway popup
-            setTimeout(() => {
-                showTakeawayPopup();
-            }, 300);
+            // Check if we have saved takeaway data
+            const savedAddress = JSON.parse(localStorage.getItem(STATE_KEYS.ADDRESS_DATA) || '{}');
+            if (savedAddress.name && savedAddress.phone) {
+                // Already have data, don't show popup
+                showToast('Using saved takeaway details');
+            } else {
+                // Show takeaway popup
+                setTimeout(() => {
+                    showTakeawayPopup();
+                }, 300);
+            }
         }
     }
     
@@ -1939,17 +2045,6 @@
                 toast.remove();
             }, 300);
         }, 3000);
-    }
-    
-    // ====== CART CLEARING ON NEW ORDER ======
-    // When coming from menu, mark as new order
-    if (document.referrer.includes('Easygo-Menu')) {
-        localStorage.setItem(STATE_KEYS.IS_NEW_ORDER, 'true');
-    }
-    
-    // When coming from payment page, don't clear anything
-    if (document.referrer.includes('Easygo-Payment')) {
-        localStorage.setItem(STATE_KEYS.IS_NEW_ORDER, 'false');
     }
 </script>
     
